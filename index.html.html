@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludus IA — Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --negro: #0A0A0A;
+  --verde: #C6FF00;
+  --blanco: #FFFFFF;
+  --gris: #A0A0A0;
+  --gris-borde: rgba(198,255,0,0.18);
+  --gris-card: #141414;
+  --gris-hover: #1a1a1a;
+  --error: #FF4D4D;
+  --warn: #F59E0B;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--negro);
+  color: var(--blanco);
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+}
+.mono { font-family: 'IBM Plex Mono', monospace; }
+
+/* ─── LAYOUT ─── */
+#app { min-height:100vh; }
+.hidden { display:none !important; }
+
+/* ─── LOGIN ─── */
+#login-screen {
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background: radial-gradient(ellipse at 60% 0%, rgba(198,255,0,0.06) 0%, transparent 60%);
+}
+.login-box {
+  width:100%;
+  max-width:400px;
+}
+.login-logo {
+  font-size:28px;
+  font-weight:700;
+  letter-spacing:-0.03em;
+  margin-bottom:8px;
+}
+.login-logo span { color: var(--verde); }
+.login-sub {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.15em;
+  color:var(--gris);
+  margin-bottom:40px;
+}
+.input-group { display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.input-group label {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.12em;
+  color:var(--gris);
+}
+.input-group input {
+  background:#111;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:var(--blanco);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  padding:12px 14px;
+  outline:none;
+  transition:border-color 0.2s;
+}
+.input-group input:focus { border-color: var(--verde); }
+.btn-primary {
+  width:100%;
+  background:var(--verde);
+  color:var(--negro);
+  border:none;
+  border-radius:6px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  padding:14px;
+  cursor:pointer;
+  margin-top:8px;
+  transition:opacity 0.2s, transform 0.15s;
+  letter-spacing:0.01em;
+}
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.btn-secondary {
+  background:transparent;
+  color:var(--blanco);
+  border:1px solid var(--gris-borde);
+  border-radius:6px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  padding:10px 18px;
+  cursor:pointer;
+  transition:border-color 0.2s, background 0.2s;
+}
+.btn-secondary:hover { border-color:var(--verde); background:rgba(198,255,0,0.06); }
+.btn-danger {
+  background:transparent;
+  color:var(--error);
+  border:1px solid rgba(255,77,77,0.3);
+  border-radius:6px;
+  font-size:13px;
+  font-weight:500;
+  padding:8px 14px;
+  cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;
+  transition:background 0.2s;
+}
+.btn-danger:hover { background:rgba(255,77,77,0.1); }
+.msg-error {
+  background:rgba(255,77,77,0.1);
+  border:1px solid rgba(255,77,77,0.3);
+  border-radius:6px;
+  color:var(--error);
+  font-size:13px;
+  padding:10px 14px;
+  margin-top:12px;
+}
+.msg-success {
+  background:rgba(198,255,0,0.08);
+  border:1px solid rgba(198,255,0,0.3);
+  border-radius:6px;
+  color:var(--verde);
+  font-size:13px;
+  padding:10px 14px;
+  margin-top:12px;
+}
+
+/* ─── NAV ─── */
+#main-nav {
+  border-bottom:1px solid var(--gris-borde);
+  padding:0 clamp(16px,4vw,48px);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:60px;
+  position:sticky;
+  top:0;
+  background:rgba(10,10,10,0.95);
+  backdrop-filter:blur(12px);
+  z-index:100;
+}
+.nav-logo { font-size:18px; font-weight:700; letter-spacing:-0.03em; }
+.nav-logo span { color:var(--verde); }
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-user { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gris); }
+.btn-logout {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  color:var(--gris);
+  border-radius:5px;
+  font-size:12px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;
+  transition:border-color 0.2s, color 0.2s;
+}
+.btn-logout:hover { border-color:var(--error); color:var(--error); }
+
+/* ─── ADMIN LAYOUT ─── */
+#admin-app {
+  display:grid;
+  grid-template-columns:220px 1fr;
+  min-height:calc(100vh - 60px);
+}
+#admin-sidebar {
+  border-right:1px solid var(--gris-borde);
+  padding:24px 0;
+  position:sticky;
+  top:60px;
+  height:calc(100vh - 60px);
+  overflow-y:auto;
+}
+.sidebar-section {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.18em;
+  color:var(--gris);
+  padding:0 20px;
+  margin-bottom:8px;
+  margin-top:24px;
+}
+.sidebar-section:first-child { margin-top:0; }
+.sidebar-item {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 20px;
+  font-size:14px;
+  font-weight:500;
+  color:var(--gris);
+  cursor:pointer;
+  border-left:2px solid transparent;
+  transition:all 0.15s;
+}
+.sidebar-item:hover { color:var(--blanco); background:var(--gris-hover); }
+.sidebar-item.active { color:var(--verde); border-left-color:var(--verde); background:rgba(198,255,0,0.06); }
+.sidebar-item .icon { font-size:16px; width:20px; text-align:center; }
+#admin-content { padding:clamp(20px,3vw,40px); overflow-x:hidden; }
+
+/* ─── CARDS ─── */
+.card {
+  background:var(--gris-card);
+  border:1px solid var(--gris-borde);
+  border-radius:10px;
+  padding:clamp(16px,2vw,24px);
+}
+.card-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:20px;
+}
+.card-title {
+  font-size:16px;
+  font-weight:600;
+  letter-spacing:-0.02em;
+}
+.stat-card {
+  background:var(--gris-card);
+  border:1px solid var(--gris-borde);
+  border-radius:10px;
+  padding:20px 24px;
+}
+.stat-num {
+  font-size:36px;
+  font-weight:700;
+  letter-spacing:-0.04em;
+  color:var(--verde);
+}
+.stat-label {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.12em;
+  color:var(--gris);
+  margin-top:4px;
+}
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.14em;
+  color:var(--gris);
+  text-align:left;
+  padding:10px 14px;
+  border-bottom:1px solid var(--gris-borde);
+}
+td {
+  padding:12px 14px;
+  font-size:14px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  vertical-align:middle;
+}
+tr:hover td { background:var(--gris-hover); }
+tr:last-child td { border-bottom:none; }
+
+/* ─── BADGES ─── */
+.badge {
+  display:inline-block;
+  padding:3px 10px;
+  border-radius:99px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.1em;
+  font-weight:500;
+  border:1px solid currentColor;
+}
+.ruta-play { color:#8B5CF6; }
+.ruta-ops  { color:#3B82F6; }
+.ruta-lab  { color:#F59E0B; }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:200;
+  padding:20px;
+}
+.modal-box {
+  background:#111;
+  border:1px solid var(--gris-borde);
+  border-radius:12px;
+  padding:32px;
+  width:100%;
+  max-width:520px;
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-title {
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-0.03em;
+  margin-bottom:24px;
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+select {
+  background:#111;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:var(--blanco);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  padding:12px 14px;
+  outline:none;
+  width:100%;
+  transition:border-color 0.2s;
+}
+select:focus { border-color:var(--verde); }
+textarea {
+  background:#111;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:var(--blanco);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  padding:12px 14px;
+  outline:none;
+  width:100%;
+  resize:vertical;
+  min-height:80px;
+  transition:border-color 0.2s;
+}
+textarea:focus { border-color:var(--verde); }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+
+/* ─── CLIENT PORTAL ─── */
+#client-app {
+  min-height:calc(100vh - 60px);
+  padding:clamp(24px,4vh,60px) clamp(16px,5vw,80px);
+  max-width:680px;
+  margin:0 auto;
+}
+.client-greeting {
+  font-size:clamp(28px,4vw,44px);
+  font-weight:700;
+  letter-spacing:-0.03em;
+  margin-bottom:6px;
+}
+.client-greeting span { color:var(--verde); }
+.client-sub {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:0.12em;
+  color:var(--gris);
+  margin-bottom:40px;
+}
+
+/* ─── MASCOTA LOADER ─── */
+.mascota-section {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:40px 0 32px;
+}
+.mascota-wrap {
+  width:140px;
+  height:140px;
+  position:relative;
+  margin-bottom:24px;
+}
+.mascota-svg { width:100%; height:100%; }
+
+/* Dado animado - nuestra mascota */
+@keyframes dado-bounce {
+  0%,100% { transform:translateY(0) rotate(0deg); }
+  25% { transform:translateY(-12px) rotate(-6deg); }
+  75% { transform:translateY(-6px) rotate(4deg); }
+}
+@keyframes dado-shadow {
+  0%,100% { transform:scaleX(1); opacity:0.4; }
+  50% { transform:scaleX(0.6); opacity:0.15; }
+}
+@keyframes progress-fill {
+  from { width:0%; }
+  to { width:var(--target-w); }
+}
+@keyframes pulse-verde {
+  0%,100% { box-shadow:0 0 0 0 rgba(198,255,0,0.4); }
+  50% { box-shadow:0 0 0 8px rgba(198,255,0,0); }
+}
+.dado-body { animation:dado-bounce 2s ease-in-out infinite; }
+.dado-shadow-el { animation:dado-shadow 2s ease-in-out infinite; }
+
+.progress-container { width:100%; max-width:320px; }
+.progress-label {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+.progress-status-text {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:0.1em;
+  color:var(--verde);
+}
+.progress-pct {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:var(--gris);
+}
+.progress-bar-bg {
+  height:6px;
+  background:rgba(255,255,255,0.08);
+  border-radius:3px;
+  overflow:hidden;
+}
+.progress-bar-fill {
+  height:100%;
+  background:var(--verde);
+  border-radius:3px;
+  transition:width 1.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ─── REQ CARD (client) ─── */
+.req-card {
+  border:1px solid var(--gris-borde);
+  border-radius:10px;
+  padding:24px;
+  margin-bottom:16px;
+  transition:border-color 0.2s;
+}
+.req-card:hover { border-color:rgba(198,255,0,0.35); }
+.req-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
+.req-card-title { font-size:17px; font-weight:600; letter-spacing:-0.02em; }
+.req-card-ruta {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.14em;
+  color:var(--gris);
+  margin-top:3px;
+}
+.status-dot {
+  width:10px; height:10px;
+  border-radius:50%;
+  display:inline-block;
+  margin-right:6px;
+  flex-shrink:0;
+}
+.history-item {
+  display:flex;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.history-item:last-child { border-bottom:none; }
+.history-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--verde);
+  flex-shrink:0;
+  margin-top:5px;
+}
+.history-text { font-size:13px; line-height:1.5; }
+.history-date {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:var(--gris);
+  margin-top:2px;
+}
+
+/* ─── SECTION TITLE ─── */
+.section-title {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.2em;
+  color:var(--gris);
+  margin-bottom:16px;
+}
+.page-title {
+  font-size:clamp(22px,2.5vw,30px);
+  font-weight:700;
+  letter-spacing:-0.03em;
+  margin-bottom:6px;
+}
+.page-sub {
+  font-size:14px;
+  color:var(--gris);
+  margin-bottom:28px;
+}
+
+/* ─── STATS GRID ─── */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:28px; }
+.clients-grid { display:grid; gap:12px; }
+
+/* ─── FILTER BAR ─── */
+.filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+.filter-btn {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:6px;
+  color:var(--gris);
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.1em;
+  padding:7px 14px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.filter-btn:hover, .filter-btn.active { border-color:var(--verde); color:var(--verde); background:rgba(198,255,0,0.06); }
+
+/* ─── TOAST ─── */
+#toast {
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  background:#111;
+  border:1px solid var(--verde);
+  border-radius:8px;
+  padding:12px 20px;
+  font-size:14px;
+  color:var(--verde);
+  z-index:999;
+  transform:translateY(80px);
+  opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+#toast.show { transform:translateY(0); opacity:1; }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:640px) {
+  #admin-app { grid-template-columns:1fr; }
+  #admin-sidebar { display:none; }
+  .form-row { grid-template-columns:1fr; }
+}
+
+/* ─── LINK STYLE ─── */
+a { color:var(--verde); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* ─── CREDENTIALS BOX ─── */
+.cred-box {
+  background:#0d1a00;
+  border:1px solid rgba(198,255,0,0.3);
+  border-radius:8px;
+  padding:16px;
+  margin-top:16px;
+}
+.cred-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.cred-label { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gris); }
+.cred-val { font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--verde); }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<div id="app">
+
+  <!-- ════════ LOGIN ════════ -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">LUDUS <span>IA</span></div>
+      <div class="login-sub mono">PORTAL DE CLIENTES</div>
+      <div class="input-group">
+        <label>EMAIL</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="input-group">
+        <label>CONTRASEÑA</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="doLogin()">Ingresar</button>
+      <div id="login-msg"></div>
+    </div>
+  </div>
+
+  <!-- ════════ NAV (shared) ════════ -->
+  <nav id="main-nav" class="hidden">
+    <div class="nav-logo">LUDUS <span>IA</span></div>
+    <div class="nav-right">
+      <span class="nav-user mono" id="nav-user-label"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </nav>
+
+  <!-- ════════ ADMIN APP ════════ -->
+  <div id="admin-app" class="hidden">
+    <aside id="admin-sidebar">
+      <div class="sidebar-section">GESTIÓN</div>
+      <div class="sidebar-item active" onclick="showAdminPage('dashboard')" id="nav-dashboard">
+        <span class="icon">◈</span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showAdminPage('clients')" id="nav-clients">
+        <span class="icon">◉</span> Clientes
+      </div>
+      <div class="sidebar-item" onclick="showAdminPage('requirements')" id="nav-requirements">
+        <span class="icon">◎</span> Requerimientos
+      </div>
+      <div class="sidebar-section">CONFIG</div>
+      <div class="sidebar-item" onclick="showAdminPage('statuses')" id="nav-statuses">
+        <span class="icon">◈</span> Estados
+      </div>
+    </aside>
+    <main id="admin-content">
+      <!-- Dashboard -->
+      <div id="page-dashboard">
+        <div class="section-title">OVERVIEW</div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Resumen de actividad Ludus IA</div>
+        <div class="stats-grid" id="dash-stats"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Actividad reciente</span>
+          </div>
+          <div id="dash-recent"></div>
+        </div>
+      </div>
+
+      <!-- Clients -->
+      <div id="page-clients" class="hidden">
+        <div class="section-title">CRM</div>
+        <div class="page-title">Clientes</div>
+        <div class="page-sub">Registra y gestiona tus clientes.</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn-primary" style="width:auto;padding:10px 22px;" onclick="openModal('modal-new-client')">+ Nuevo cliente</button>
+          <div class="filter-bar" id="clients-filter">
+            <button class="filter-btn active" onclick="filterClients('all',this)">Todos</button>
+            <button class="filter-btn" onclick="filterClients('play',this)">Play</button>
+            <button class="filter-btn" onclick="filterClients('ops',this)">Ops</button>
+            <button class="filter-btn" onclick="filterClients('lab',this)">Lab</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>CLIENTE</th><th>EMPRESA</th><th>RUTA</th><th>WHATSAPP</th><th>FECHA</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="clients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requirements -->
+      <div id="page-requirements" class="hidden">
+        <div class="section-title">REQUERIMIENTOS</div>
+        <div class="page-title">Requerimientos</div>
+        <div class="page-sub">Seguimiento de proyectos y solicitudes por cliente.</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="btn-primary" style="width:auto;padding:10px 22px;" onclick="openModal('modal-new-req')">+ Nuevo requerimiento</button>
+          <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterReqs('all',this)">Todos</button>
+            <button class="filter-btn" onclick="filterReqs('play',this)">Play</button>
+            <button class="filter-btn" onclick="filterReqs('ops',this)">Ops</button>
+            <button class="filter-btn" onclick="filterReqs('lab',this)">Lab</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>TÍTULO</th><th>CLIENTE</th><th>RUTA</th><th>ESTADO</th><th>FECHA</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="reqs-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statuses config -->
+      <div id="page-statuses" class="hidden">
+        <div class="section-title">CONFIGURACIÓN</div>
+        <div class="page-title">Estados por ruta</div>
+        <div class="page-sub">Define el flujo de estados para cada línea de negocio.</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <button class="btn-primary" style="width:auto;padding:10px 22px;" onclick="openModal('modal-new-status')">+ Nuevo estado</button>
+        </div>
+        <div id="statuses-list" style="display:grid;gap:12px;"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ════════ CLIENT APP ════════ -->
+  <div id="client-app" class="hidden">
+    <div class="client-greeting">Hola, <span id="client-name">—</span></div>
+    <div class="client-sub mono" id="client-company-label">PORTAL LUDUS IA</div>
+
+    <!-- Mascota + progress -->
+    <div id="mascota-section" class="mascota-section">
+      <div class="mascota-wrap">
+        <svg class="mascota-svg" viewBox="0 0 140 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Shadow -->
+          <ellipse class="dado-shadow-el" cx="70" cy="150" rx="30" ry="6" fill="rgba(198,255,0,0.15)"/>
+          <!-- Body group with bounce -->
+          <g class="dado-body">
+            <!-- Dado principal -->
+            <rect x="20" y="20" width="100" height="100" rx="22" fill="#C6FF00"/>
+            <!-- Cara / ojos grandes expresivos -->
+            <ellipse cx="48" cy="68" rx="13" ry="15" fill="#0A0A0A"/>
+            <ellipse cx="92" cy="68" rx="13" ry="15" fill="#0A0A0A"/>
+            <!-- Brillos en ojos -->
+            <circle cx="53" cy="63" r="4" fill="white"/>
+            <circle cx="97" cy="63" r="4" fill="white"/>
+            <!-- Sonrisa confiada -->
+            <path d="M50 90 Q70 106 90 90" stroke="#0A0A0A" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <!-- Puntitos dado (decorativos, esquinas) -->
+            <circle cx="35" cy="35" r="4" fill="rgba(10,10,10,0.25)"/>
+            <circle cx="105" cy="35" r="4" fill="rgba(10,10,10,0.25)"/>
+            <circle cx="35" cy="105" r="4" fill="rgba(10,10,10,0.25)"/>
+            <circle cx="105" cy="105" r="4" fill="rgba(10,10,10,0.25)"/>
+            <!-- Brazos -->
+            <rect x="2" y="55" width="20" height="10" rx="5" fill="#C6FF00"/>
+            <rect x="118" y="55" width="20" height="10" rx="5" fill="#C6FF00"/>
+            <!-- Manos -->
+            <circle cx="4" cy="60" r="7" fill="#C6FF00"/>
+            <circle cx="136" cy="60" r="7" fill="#C6FF00"/>
+            <!-- Piernas -->
+            <rect x="45" y="118" width="16" height="24" rx="8" fill="#C6FF00"/>
+            <rect x="79" y="118" width="16" height="24" rx="8" fill="#C6FF00"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="progress-container" id="progress-wrap">
+        <div class="progress-label">
+          <span class="progress-status-text mono" id="progress-status-text">Cargando...</span>
+          <span class="progress-pct mono" id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requirements list -->
+    <div id="client-reqs-wrap">
+      <div class="section-title" style="margin-bottom:16px;">MIS REQUERIMIENTOS</div>
+      <div id="client-reqs-list"></div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- ════════ MODALS ════════ -->
+
+<!-- New Client Modal -->
+<div id="modal-new-client" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-new-client')">
+  <div class="modal-box">
+    <div class="modal-title">Nuevo cliente</div>
+    <div class="input-group">
+      <label>NOMBRE COMPLETO</label>
+      <input type="text" id="nc-name" placeholder="María García">
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>EMPRESA</label>
+        <input type="text" id="nc-company" placeholder="Empresa SAC">
+      </div>
+      <div class="input-group">
+        <label>RUTA</label>
+        <select id="nc-ruta">
+          <option value="play">Play</option>
+          <option value="ops">Ops</option>
+          <option value="lab">Lab</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>EMAIL (será su usuario)</label>
+        <input type="email" id="nc-email" placeholder="cliente@empresa.com">
+      </div>
+      <div class="input-group">
+        <label>WHATSAPP</label>
+        <input type="text" id="nc-wa" placeholder="+51 999 999 999">
+      </div>
+    </div>
+    <div class="input-group">
+      <label>CONTRASEÑA INICIAL</label>
+      <input type="text" id="nc-pass" placeholder="Mín. 8 caracteres" value="">
+    </div>
+    <div id="nc-creds" class="hidden cred-box"></div>
+    <div id="nc-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-new-client')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="createClient()">Crear cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Requirement Modal -->
+<div id="modal-new-req" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-new-req')">
+  <div class="modal-box">
+    <div class="modal-title">Nuevo requerimiento</div>
+    <div class="input-group">
+      <label>CLIENTE</label>
+      <select id="nr-client"></select>
+    </div>
+    <div class="input-group">
+      <label>TÍTULO</label>
+      <input type="text" id="nr-title" placeholder="Ej: Ruleta digital activación Octubre">
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>RUTA</label>
+        <select id="nr-ruta" onchange="loadStatusesForRuta(this.value,'nr-status')">
+          <option value="play">Play</option>
+          <option value="ops">Ops</option>
+          <option value="lab">Lab</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>ESTADO INICIAL</label>
+        <select id="nr-status"></select>
+      </div>
+    </div>
+    <div class="input-group">
+      <label>DESCRIPCIÓN</label>
+      <textarea id="nr-desc" placeholder="Detalle del requerimiento..."></textarea>
+    </div>
+    <div class="input-group">
+      <label>NOTAS INTERNAS (solo tú las ves)</label>
+      <textarea id="nr-notes" placeholder="Notas privadas..."></textarea>
+    </div>
+    <div id="nr-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-new-req')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="createReq()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Requirement Modal -->
+<div id="modal-edit-req" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-edit-req')">
+  <div class="modal-box">
+    <div class="modal-title">Actualizar requerimiento</div>
+    <input type="hidden" id="er-id">
+    <div class="input-group">
+      <label>ESTADO</label>
+      <select id="er-status"></select>
+    </div>
+    <div class="input-group">
+      <label>MENSAJE AL CLIENTE (aparece en historial)</label>
+      <textarea id="er-message" placeholder="Ej: Propuesta enviada por WhatsApp. Revisala y avísanos."></textarea>
+    </div>
+    <div class="input-group">
+      <label>NOTAS INTERNAS (solo tú las ves)</label>
+      <textarea id="er-notes"></textarea>
+    </div>
+    <div id="er-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-edit-req')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="updateReq()">Guardar cambio</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Status Modal -->
+<div id="modal-new-status" class="modal-overlay hidden" onclick="closeModalOutside(event,'modal-new-status')">
+  <div class="modal-box">
+    <div class="modal-title">Nuevo estado</div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>RUTA</label>
+        <select id="ns-ruta">
+          <option value="play">Play</option>
+          <option value="ops">Ops</option>
+          <option value="lab">Lab</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>CLAVE INTERNA</label>
+        <input type="text" id="ns-key" placeholder="en_revision">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="input-group">
+        <label>ETIQUETA VISIBLE</label>
+        <input type="text" id="ns-label" placeholder="En revisión">
+      </div>
+      <div class="input-group">
+        <label>COLOR HEX</label>
+        <input type="text" id="ns-color" placeholder="#C6FF00" value="#C6FF00">
+      </div>
+    </div>
+    <div class="input-group">
+      <label>ORDEN (número)</label>
+      <input type="number" id="ns-order" value="5">
+    </div>
+    <div id="ns-msg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-new-status')">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="createStatus()">Crear estado</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — reemplaza con tus valores de Supabase
+// ══════════════════════════════════════════════
+const SUPABASE_URL = 'TU_SUPABASE_URL';
+const SUPABASE_KEY = 'TU_SUPABASE_ANON_KEY';
+const ADMIN_EMAIL  = 'TU_EMAIL_ADMIN'; // tu email de admin
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── State ──
+let currentUser = null;
+let currentProfile = null;
+let allClients = [];
+let allReqs = [];
+let allStatuses = [];
+let clientFilter = 'all';
+let reqFilter = 'all';
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const msg   = document.getElementById('login-msg');
+  if (!email || !pass) { showMsg('login-msg','Completa email y contraseña','error'); return; }
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { showMsg('login-msg', error.message, 'error'); btn.disabled=false; btn.textContent='Ingresar'; return; }
+  await bootApp(data.user);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function bootApp(user) {
+  currentUser = user;
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = prof;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-nav').classList.remove('hidden');
+  document.getElementById('nav-user-label').textContent = prof.full_name || user.email;
+  if (prof.role === 'admin') {
+    document.getElementById('admin-app').classList.remove('hidden');
+    await loadAllStatuses();
+    await loadDashboard();
+  } else {
+    document.getElementById('client-app').classList.remove('hidden');
+    await loadClientPortal();
+  }
+}
+
+// Check session on load
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { user } } = await sb.auth.getUser();
+  if (user) await bootApp(user);
+  // Generate default password suggestion
+  document.getElementById('nc-pass').value = genPass();
+});
+
+function genPass() {
+  const chars='abcdefghjkmnpqrstuvwxyz23456789';
+  let p='';
+  for(let i=0;i<10;i++) p+=chars[Math.floor(Math.random()*chars.length)];
+  return p;
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — DASHBOARD
+// ══════════════════════════════════════════════
+async function loadDashboard() {
+  const { data: clients } = await sb.from('profiles').select('*').eq('role','client');
+  const { data: reqs } = await sb.from('requirements').select('*, profiles(full_name,company)');
+  allClients = clients || [];
+  allReqs = reqs || [];
+
+  const active = allReqs.filter(r => !['entregado','activo','completado'].includes(r.status_key));
+  const statsEl = document.getElementById('dash-stats');
+  statsEl.innerHTML = `
+    ${statCard(allClients.length,'CLIENTES')}
+    ${statCard(allReqs.length,'REQUERIMIENTOS')}
+    ${statCard(active.length,'EN CURSO')}
+    ${statCard(allClients.filter(c=>c.ruta==='play').length,'PLAY')}
+    ${statCard(allClients.filter(c=>c.ruta==='ops').length,'OPS')}
+    ${statCard(allClients.filter(c=>c.ruta==='lab').length,'LAB')}
+  `;
+
+  const recent = [...allReqs].sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).slice(0,6);
+  document.getElementById('dash-recent').innerHTML = recent.length
+    ? `<div class="table-wrap"><table>
+        <thead><tr><th>REQUERIMIENTO</th><th>CLIENTE</th><th>RUTA</th><th>ESTADO</th></tr></thead>
+        <tbody>${recent.map(r=>`<tr>
+          <td><strong>${r.title}</strong></td>
+          <td>${r.profiles?.full_name||'—'}</td>
+          <td>${rutaBadge(r.ruta)}</td>
+          <td>${statusBadge(r.status_key, r.ruta)}</td>
+        </tr>`).join('')}</tbody></table></div>`
+    : '<p style="color:var(--gris);font-size:14px;">Sin requerimientos aún.</p>';
+}
+
+function statCard(n,l){ return `<div class="stat-card"><div class="stat-num">${n}</div><div class="stat-label">${l}</div></div>`; }
+
+// ══════════════════════════════════════════════
+// ADMIN — CLIENTS
+// ══════════════════════════════════════════════
+async function loadClients() {
+  const { data } = await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
+  allClients = data || [];
+  renderClients();
+}
+
+function renderClients() {
+  const list = clientFilter==='all' ? allClients : allClients.filter(c=>c.ruta===clientFilter);
+  document.getElementById('clients-tbody').innerHTML = list.length
+    ? list.map(c=>`<tr>
+        <td><strong>${c.full_name||'—'}</strong></td>
+        <td>${c.company||'—'}</td>
+        <td>${rutaBadge(c.ruta)}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${c.whatsapp||'—'}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gris);">${fmtDate(c.created_at)}</td>
+        <td><button class="btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openReqForClient('${c.id}','${(c.ruta||'play')}')">+ Req</button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="text-align:center;color:var(--gris);padding:32px;">Sin clientes en esta ruta.</td></tr>`;
+}
+
+function filterClients(ruta, btn) {
+  clientFilter = ruta;
+  document.querySelectorAll('#clients-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClients();
+}
+
+async function createClient() {
+  const name    = document.getElementById('nc-name').value.trim();
+  const company = document.getElementById('nc-company').value.trim();
+  const ruta    = document.getElementById('nc-ruta').value;
+  const email   = document.getElementById('nc-email').value.trim();
+  const wa      = document.getElementById('nc-wa').value.trim();
+  const pass    = document.getElementById('nc-pass').value.trim();
+  if (!name||!email||!pass) { showMsg('nc-msg','Nombre, email y contraseña son obligatorios','error'); return; }
+  if (pass.length<8) { showMsg('nc-msg','La contraseña debe tener al menos 8 caracteres','error'); return; }
+
+  // Create user via admin API isn't available on client SDK — use signUp + manual profile
+  const { data, error } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { full_name: name, role: 'client' } }
+  });
+  if (error) { showMsg('nc-msg', error.message, 'error'); return; }
+
+  // Update profile with extra fields
+  await sb.from('profiles').update({ full_name:name, company, ruta, whatsapp:wa, role:'client' }).eq('id', data.user.id);
+
+  const creds = document.getElementById('nc-creds');
+  creds.innerHTML = `
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--verde);margin-bottom:10px;letter-spacing:0.1em;">✓ CLIENTE CREADO — COMPARTE ESTAS CREDENCIALES</div>
+    <div class="cred-row"><span class="cred-label">EMAIL</span><span class="cred-val">${email}</span></div>
+    <div class="cred-row"><span class="cred-label">CONTRASEÑA</span><span class="cred-val">${pass}</span></div>
+    <div class="cred-row" style="margin-top:8px;"><span class="cred-label">PORTAL</span><span class="cred-val">${location.href}</span></div>
+    <p style="font-size:12px;color:var(--gris);margin-top:10px;">Copia esto y envíaselo por WhatsApp.</p>
+  `;
+  creds.classList.remove('hidden');
+  showMsg('nc-msg','','');
+  toast('Cliente creado ✓');
+  await loadClients();
+  document.getElementById('nc-pass').value = genPass();
+}
+
+function openReqForClient(clientId, ruta) {
+  openModal('modal-new-req');
+  setTimeout(()=>{
+    const sel = document.getElementById('nr-client');
+    if (sel) sel.value = clientId;
+    document.getElementById('nr-ruta').value = ruta;
+    loadStatusesForRuta(ruta,'nr-status');
+  },100);
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — REQUIREMENTS
+// ══════════════════════════════════════════════
+async function loadReqs() {
+  const { data } = await sb.from('requirements')
+    .select('*, profiles(full_name,company)')
+    .order('updated_at',{ascending:false});
+  allReqs = data || [];
+  renderReqs();
+}
+
+function renderReqs() {
+  const list = reqFilter==='all' ? allReqs : allReqs.filter(r=>r.ruta===reqFilter);
+  document.getElementById('reqs-tbody').innerHTML = list.length
+    ? list.map(r=>`<tr>
+        <td><strong>${r.title}</strong></td>
+        <td>${r.profiles?.full_name||'—'}<br><span style="font-size:11px;color:var(--gris);">${r.profiles?.company||''}</span></td>
+        <td>${rutaBadge(r.ruta)}</td>
+        <td>${statusBadge(r.status_key, r.ruta)}</td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--gris);">${fmtDate(r.updated_at)}</td>
+        <td><button class="btn-secondary" style="font-size:12px;padding:6px 12px;" onclick="openEditReq('${r.id}','${r.ruta}','${r.status_key}','${(r.notes_internal||'').replace(/'/g,"\\'")}')">Actualizar</button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" style="text-align:center;color:var(--gris);padding:32px;">Sin requerimientos.</td></tr>`;
+}
+
+function filterReqs(ruta, btn) {
+  reqFilter = ruta;
+  document.querySelectorAll('#page-requirements .filter-bar .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderReqs();
+}
+
+async function loadClientsForSelect(selId) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = allClients.map(c=>`<option value="${c.id}">${c.full_name||c.id} ${c.company?'— '+c.company:''}</option>`).join('');
+}
+
+async function createReq() {
+  const clientId = document.getElementById('nr-client').value;
+  const title    = document.getElementById('nr-title').value.trim();
+  const ruta     = document.getElementById('nr-ruta').value;
+  const status   = document.getElementById('nr-status').value;
+  const desc     = document.getElementById('nr-desc').value.trim();
+  const notes    = document.getElementById('nr-notes').value.trim();
+  if (!clientId||!title) { showMsg('nr-msg','Cliente y título son obligatorios','error'); return; }
+
+  const { data: req, error } = await sb.from('requirements').insert({
+    client_id:clientId, title, ruta, status_key:status, description:desc, notes_internal:notes
+  }).select().single();
+  if (error) { showMsg('nr-msg',error.message,'error'); return; }
+
+  // Log initial history
+  await sb.from('req_history').insert({ requirement_id:req.id, status_key:status, message:'Requerimiento creado.' });
+
+  closeModal('modal-new-req');
+  toast('Requerimiento creado ✓');
+  await loadReqs();
+}
+
+async function openEditReq(id, ruta, currentStatus, notes) {
+  document.getElementById('er-id').value = id;
+  document.getElementById('er-notes').value = notes;
+  document.getElementById('er-message').value = '';
+  await loadStatusesForRuta(ruta, 'er-status');
+  document.getElementById('er-status').value = currentStatus;
+  openModal('modal-edit-req');
+}
+
+async function updateReq() {
+  const id      = document.getElementById('er-id').value;
+  const status  = document.getElementById('er-status').value;
+  const msg     = document.getElementById('er-message').value.trim();
+  const notes   = document.getElementById('er-notes').value.trim();
+
+  const { error } = await sb.from('requirements').update({
+    status_key:status, notes_internal:notes, updated_at:new Date().toISOString()
+  }).eq('id',id);
+  if (error) { showMsg('er-msg',error.message,'error'); return; }
+
+  if (msg) {
+    await sb.from('req_history').insert({ requirement_id:id, status_key:status, message:msg });
+  }
+  closeModal('modal-edit-req');
+  toast('Estado actualizado ✓');
+  await loadReqs();
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — STATUSES
+// ══════════════════════════════════════════════
+async function loadAllStatuses() {
+  const { data } = await sb.from('status_configs').select('*').order('ruta').order('sort_order');
+  allStatuses = data || [];
+}
+
+async function renderStatuses() {
+  const grouped = {};
+  allStatuses.forEach(s=>{ if(!grouped[s.ruta]) grouped[s.ruta]=[]; grouped[s.ruta].push(s); });
+  document.getElementById('statuses-list').innerHTML = Object.entries(grouped).map(([ruta,statuses])=>`
+    <div class="card">
+      <div class="card-header"><span class="card-title">${rutaBadge(ruta)} ${ruta.toUpperCase()}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${statuses.map(s=>`
+          <span style="background:${s.color}22;border:1px solid ${s.color};color:${s.color};
+            padding:6px 14px;border-radius:99px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;">
+            ${s.sort_order}. ${s.label}
+          </span>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadStatusesForRuta(ruta, selId) {
+  const filtered = allStatuses.filter(s=>s.ruta===ruta);
+  const sel = document.getElementById(selId);
+  if (!sel) return;
+  sel.innerHTML = filtered.map(s=>`<option value="${s.key}">${s.label}</option>`).join('');
+}
+
+async function createStatus() {
+  const ruta  = document.getElementById('ns-ruta').value;
+  const key   = document.getElementById('ns-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const label = document.getElementById('ns-label').value.trim();
+  const color = document.getElementById('ns-color').value.trim();
+  const order = parseInt(document.getElementById('ns-order').value)||5;
+  if (!key||!label) { showMsg('ns-msg','Clave y etiqueta son obligatorios','error'); return; }
+
+  const { error } = await sb.from('status_configs').insert({ ruta, key, label, color, sort_order:order });
+  if (error) { showMsg('ns-msg',error.message,'error'); return; }
+  await loadAllStatuses();
+  closeModal('modal-new-status');
+  toast('Estado creado ✓');
+  renderStatuses();
+}
+
+// ══════════════════════════════════════════════
+// CLIENT PORTAL
+// ══════════════════════════════════════════════
+async function loadClientPortal() {
+  document.getElementById('client-name').textContent = currentProfile.full_name?.split(' ')[0] || 'Cliente';
+  if (currentProfile.company) {
+    document.getElementById('client-company-label').textContent = currentProfile.company.toUpperCase() + ' — PORTAL LUDUS IA';
+  }
+
+  const { data: reqs } = await sb.from('requirements')
+    .select('*')
+    .eq('client_id', currentUser.id)
+    .order('created_at',{ascending:false});
+
+  if (!reqs || reqs.length === 0) {
+    document.getElementById('mascota-section').innerHTML += `
+      <p style="color:var(--gris);font-size:14px;margin-top:20px;text-align:center;">
+        Pronto tendrás tus proyectos aquí.<br>Nos ponemos en contacto contigo por WhatsApp.
+      </p>
+    `;
+    document.getElementById('client-reqs-wrap').classList.add('hidden');
+    return;
+  }
+
+  // Show progress for most recent active req
+  const activeReq = reqs[0];
+  await renderProgress(activeReq);
+  await renderClientReqs(reqs);
+}
+
+async function renderProgress(req) {
+  const statuses = allStatuses.filter(s=>s.ruta===req.ruta);
+  // load statuses if not already
+  if (!statuses.length) {
+    const { data } = await sb.from('status_configs').select('*').eq('ruta',req.ruta).order('sort_order');
+    if (data) data.forEach(s=>{ if(!allStatuses.find(x=>x.key===s.key&&x.ruta===s.ruta)) allStatuses.push(s); });
+  }
+  const slist = allStatuses.filter(s=>s.ruta===req.ruta).sort((a,b)=>a.sort_order-b.sort_order);
+  const currentIdx = slist.findIndex(s=>s.key===req.status_key);
+  const pct = slist.length > 1 ? Math.round(((currentIdx+1)/slist.length)*100) : 100;
+  const currentStatus = slist[currentIdx] || slist[0];
+  const label = currentStatus?.label || req.status_key;
+
+  document.getElementById('progress-status-text').textContent = label;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  setTimeout(()=>{ document.getElementById('progress-bar').style.width = pct + '%'; }, 300);
+}
+
+async function renderClientReqs(reqs) {
+  // Load statuses for all rutas needed
+  const rutas = [...new Set(reqs.map(r=>r.ruta))];
+  for (const ruta of rutas) {
+    if (!allStatuses.find(s=>s.ruta===ruta)) {
+      const { data } = await sb.from('status_configs').select('*').eq('ruta',ruta).order('sort_order');
+      if (data) allStatuses.push(...data);
+    }
+  }
+
+  const wrap = document.getElementById('client-reqs-list');
+  wrap.innerHTML = '';
+
+  for (const req of reqs) {
+    const { data: history } = await sb.from('req_history')
+      .select('*')
+      .eq('requirement_id',req.id)
+      .order('created_at',{ascending:false});
+
+    const slist = allStatuses.filter(s=>s.ruta===req.ruta).sort((a,b)=>a.sort_order-b.sort_order);
+    const statusObj = slist.find(s=>s.key===req.status_key);
+    const color = statusObj?.color || '#C6FF00';
+    const label = statusObj?.label || req.status_key;
+
+    const histHtml = history && history.length
+      ? history.map(h=>`
+          <div class="history-item">
+            <div class="history-dot" style="background:${color};"></div>
+            <div>
+              <div class="history-text">${h.message || '—'}</div>
+              <div class="history-date">${fmtDateTime(h.created_at)}</div>
+            </div>
+          </div>
+        `).join('')
+      : '<p style="color:var(--gris);font-size:13px;">Sin actualizaciones aún.</p>';
+
+    const card = document.createElement('div');
+    card.className = 'req-card';
+    card.innerHTML = `
+      <div class="req-card-header">
+        <div>
+          <div class="req-card-title">${req.title}</div>
+          <div class="req-card-ruta mono">${rutaLabel(req.ruta)}</div>
+        </div>
+        <span class="badge" style="color:${color};border-color:${color};white-space:nowrap;">
+          <span class="status-dot" style="background:${color};"></span>${label}
+        </span>
+      </div>
+      ${req.description?`<p style="font-size:14px;color:var(--gris);margin-bottom:16px;line-height:1.5;">${req.description}</p>`:''}
+      <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:14px;">
+        <div class="section-title" style="margin-bottom:10px;font-size:10px;">HISTORIAL</div>
+        ${histHtml}
+      </div>
+    `;
+    wrap.appendChild(card);
+  }
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+async function showAdminPage(page) {
+  ['dashboard','clients','requirements','statuses'].forEach(p=>{
+    document.getElementById('page-'+p).classList.toggle('hidden', p!==page);
+    document.getElementById('nav-'+p).classList.toggle('active', p===page);
+  });
+  if (page==='dashboard') await loadDashboard();
+  if (page==='clients') { await loadClients(); }
+  if (page==='requirements') {
+    await loadClients();
+    await loadClientsForSelect('nr-client');
+    await loadStatusesForRuta('play','nr-status');
+    await loadReqs();
+  }
+  if (page==='statuses') {
+    await loadAllStatuses();
+    renderStatuses();
+  }
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.remove('hidden');
+  if (id==='modal-new-client') {
+    document.getElementById('nc-creds').classList.add('hidden');
+    document.getElementById('nc-msg').innerHTML='';
+  }
+  if (id==='modal-new-req') {
+    loadClientsForSelect('nr-client');
+    loadStatusesForRuta('play','nr-status');
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function closeModalOutside(e,id) { if(e.target.id===id) closeModal(id); }
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function rutaBadge(ruta) {
+  if(!ruta) return '—';
+  const cls = {play:'ruta-play',ops:'ruta-ops',lab:'ruta-lab'}[ruta]||'';
+  return `<span class="badge ${cls}">${ruta.toUpperCase()}</span>`;
+}
+function rutaLabel(ruta) {
+  return {play:'LUDUS PLAY',ops:'LUDUS OPS',lab:'LUDUS LAB'}[ruta]||ruta?.toUpperCase()||'—';
+}
+function statusBadge(key, ruta) {
+  const s = allStatuses.find(x=>x.key===key&&x.ruta===ruta);
+  const color = s?.color||'#888';
+  const label = s?.label||key||'—';
+  return `<span class="badge" style="color:${color};border-color:${color};">${label}</span>`;
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'});
+}
+function fmtDateTime(d) {
+  if(!d) return '—';
+  return new Date(d).toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = text ? `<div class="msg-${type==='error'?'error':'success'}">${text}</div>` : '';
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// Keyboard: Enter on login
+document.getElementById('login-pass')?.addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+</script>
+</body>
+</html>
