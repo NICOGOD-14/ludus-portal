@@ -36,7 +36,7 @@ export function runAutomation(a, by = 'automatización') {
   const p = a.params || {};
   if (a.type === 'scout') return enqueue('scout', { query: p.query || 'GTA 6 gameplay', max: Number(p.max) || 2, clipsPerVideo: Number(p.clipsPerVideo) || 3, creativeCommons: Boolean(p.creativeCommons) }, { by });
   if (a.type === 'research') return enqueue('research', { query: p.query || '', count: Number(p.count) || 5, autoStory: Number(p.autoStory) || 0 }, { by });
-  if (a.type === 'chat') return enqueue('chat', { premise: p.query || '', theme: p.theme || 'oscuro', voices: Boolean(p.voices) }, { by });
+  if (a.type === 'chat') return enqueue('chat', { premise: p.query || '', theme: p.theme || 'oscuro' }, { by });
   if (a.type === 'analytics') return enqueue('analytics', {}, { by });
   return null;
 }

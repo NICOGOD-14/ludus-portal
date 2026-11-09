@@ -30,7 +30,7 @@ function initStories() {
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      await api('/api/jobs', { body: { type: 'chat', payload: { premise: f.get('premise'), tone: f.get('tone'), theme: f.get('theme'), voices: f.get('voices') === 'on' } } });
+      await api('/api/jobs', { body: { type: 'chat', payload: { premise: f.get('premise'), tone: f.get('tone'), theme: f.get('theme') } } });
       e.target.premise.value = '';
       toast('💬 Mateo está escribiendo la historia; aparecerá en el Estudio.');
     } catch (err) { toast(err.message, true); }
@@ -39,12 +39,12 @@ function initStories() {
     const txt = byoPrompt($('#byo-type').value, $('#byo-idea').value.trim());
     try { await navigator.clipboard.writeText(txt); toast('📋 Copiado. Pégalo en claude.ai y luego trae su respuesta aquí.'); } catch { $('#byo-paste').value = txt; toast('Copia el texto del cuadro y pégalo en claude.ai'); }
   });
-  $('#byo-type').addEventListener('change', () => { const chat = $('#byo-type').value === 'chat'; $('#byo-theme').classList.toggle('hidden', !chat); $('#byo-voices').parentElement.classList.toggle('hidden', !chat); });
+  $('#byo-type').addEventListener('change', () => { const chat = $('#byo-type').value === 'chat'; $('#byo-theme').classList.toggle('hidden', !chat);  });
   $('#byo-go').addEventListener('click', async () => {
     const text = $('#byo-paste').value.trim();
     if (!text) return toast('Pega primero la respuesta de Claude', true);
     try {
-      await api('/api/import', { body: { type: $('#byo-type').value, text, theme: $('#byo-theme').value, voices: $('#byo-voices').checked } });
+      await api('/api/import', { body: { type: $('#byo-type').value, text, theme: $('#byo-theme').value } });
       $('#byo-paste').value = '';
       toast('🎬 ¡Recibido! El equipo lo está produciendo; lo verás en el Estudio.');
     } catch (e) { toast(e.message, true); }
@@ -113,7 +113,7 @@ function renderAutos() {
         <div class="row wrap" style="margin-top:8px">
           ${a.type !== 'analytics' ? `<input data-q="${a.id}" value="${esc(p.query || '')}" placeholder="${a.type === 'scout' ? 'Búsqueda' : a.type === 'chat' ? 'Idea (vacío = sorpresa)' : 'Tema (vacío = variado)'}" style="width:220px">` : ''}
           ${a.type === 'scout' ? `<label>Videos <input type="number" data-max="${a.id}" value="${p.max || 2}" min="1" max="5"></label><label>Clips c/u <input type="number" data-cpv="${a.id}" value="${p.clipsPerVideo || 3}" min="1" max="8"></label><label><input type="checkbox" data-cc="${a.id}" ${p.creativeCommons ? 'checked' : ''}> Solo Creative Commons</label>` : ''}
-          ${a.type === 'chat' ? `<select data-theme="${a.id}">${Object.entries(store.state.options.chatThemes || {}).map(([k, v]) => `<option value="${k}" ${p.theme === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select><label><input type="checkbox" data-voices="${a.id}" ${p.voices ? 'checked' : ''}> Voces</label>` : ''}
+          ${a.type === 'chat' ? `<select data-theme="${a.id}">${Object.entries(store.state.options.chatThemes || {}).map(([k, v]) => `<option value="${k}" ${p.theme === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>` : ''}
           ${a.type === 'research' ? `<label>Temas <input type="number" data-count="${a.id}" value="${p.count || 5}" min="1" max="10"></label><label>Videos auto <input type="number" data-auto="${a.id}" value="${p.autoStory ?? 1}" min="0" max="5"></label>` : ''}
           <label>Cada <input type="number" data-int="${a.id}" value="${a.intervalMin}" min="15"> min</label>
           <button class="btn small" data-savea="${a.id}">Guardar</button>
@@ -135,7 +135,6 @@ function renderAutos() {
     if (v('data-cc')) params.creativeCommons = v('data-cc').checked;
     if (v('data-count')) params.count = Number(v('data-count').value);
     if (v('data-theme')) params.theme = v('data-theme').value;
-    if (v('data-voices')) params.voices = v('data-voices').checked;
     if (v('data-auto')) params.autoStory = Number(v('data-auto').value);
     patch(id, { params, intervalMin: Number(v('data-int').value) }).then(() => toast('Guardado ✓')).catch((e) => toast(e.message, true));
   }));
@@ -300,10 +299,11 @@ Reglas:
 - 12 a 20 mensajes cortos (máximo 90 caracteres cada uno), ritmo rápido, malentendidos y un REMATE final que sorprenda o haga reír.
 - Humor sano. Sin personas reales, sin insultos, sin marcas en mal plan. Si metes un dato curioso, que sea real.
 - Como máximo 1 personaje con "me": true (es quien escribe desde la derecha).
+- El video NO tiene voces: solo sonidos de mensaje. En "sfx" pon un efecto SOLO en 3-5 momentos clave: "grillos" (silencio incómodo), "boing" (chiste), "sorpresa", "boom" (impacto), "error", "drama" (dun dun duuun), "tension", "triste" (fracaso), y "remate" (ba-dum-tss) en el último mensaje. En los demás pon "none".
 - "header" es una frase corta entre comillas que resume el chiste (va arriba del chat).
 
 Responde SOLO con este JSON, sin texto antes ni después:
-{"title":"título para YouTube (máx 70 caracteres)","header":"\"frase gancho\"","characters":[{"name":"Ana","role":"Gerente","me":false},{"name":"Yo","role":"","me":true}],"messages":[{"from":"Ana","text":"..."},{"from":"Yo","text":"..."}],"description":"descripción con una pregunta para los comentarios","hashtags":["#Shorts","#Humor"]}`;
+{"title":"título para YouTube (máx 70 caracteres)","header":"\"frase gancho\"","characters":[{"name":"Ana","role":"Gerente","me":false},{"name":"Yo","role":"","me":true}],"messages":[{"from":"Ana","text":"...","sfx":"none"},{"from":"Yo","text":"...","sfx":"grillos"}],"description":"descripción con una pregunta para los comentarios","hashtags":["#Shorts","#Humor"]}`;
   return `Eres guionista de Shorts de datos curiosos en español latino para el canal "${ch.channelName}". Estilo "novela IA": narración cercana, frases cortas, tensión y un giro.
 
 Tema: ${idea || 'elige un dato curioso REAL y sorprendente (historia, espacio, animales, ciencia, misterios o Latinoamérica)'}

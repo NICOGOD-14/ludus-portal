@@ -134,3 +134,12 @@ test('normalizeChat descarta mensajes de personajes inexistentes', () => {
   const c = normalizeChat({ characters: [{ name: 'Ana' }], messages: [{ from: 'Ana', text: 'hola' }, { from: 'Nadie', text: 'x' }, ['Ana', 'chau']] });
   assert.deepEqual(c.messages.map((m) => m.text), ['hola', 'chau']);
 });
+
+test('efectos de trama automáticos en historias en chat', async () => {
+  const { resolveSfx } = await import('../server/pipeline/chatstory.js');
+  const fx = resolveSfx([
+    { from: 'A', text: 'hola' }, { from: 'B', text: '...' }, { from: 'A', text: 'ok' }, { from: 'A', text: 'bien' },
+    { from: 'B', text: 'NO PUEDE SER' }, { from: 'A', text: 'jajaja', sfx: 'none' }, { from: 'B', text: 'fin', sfx: 'drama' }, { from: 'A', text: 'remate' },
+  ]);
+  assert.deepEqual(fx, [null, 'grillos', null, null, 'sorpresa', null, 'drama', 'remate']);
+});
