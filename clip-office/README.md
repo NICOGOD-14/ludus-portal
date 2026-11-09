@@ -6,7 +6,14 @@ Entras a la oficina, haces clic en cualquier trabajador, ves qué está haciendo
 
 ---
 
-## 🚀 Instalación (una sola vez)
+## ⚡ La forma más fácil (Windows)
+
+1. Descomprime el .zip.
+2. Entra a la carpeta `clip-office` y dale doble clic a **`ABRIR-OFICINA.bat`**.
+3. Si Windows pregunta "¿Permitir cambios?", di que **Sí**. Instala solo Node.js, Python y FFmpeg si no los tienes. Si te pide cerrar y volver a abrir, hazlo.
+4. Se abre la oficina en tu navegador y, en la ventana negra, aparece **tu link para el celular** con su contraseña.
+
+## 🚀 Instalación manual (una sola vez)
 
 Necesitas: **Node.js 20+** ([nodejs.org](https://nodejs.org)), **Python 3** ([python.org](https://python.org), marca "Add Python to PATH") y **FFmpeg**.
 
