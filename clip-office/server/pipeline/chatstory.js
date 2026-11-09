@@ -147,8 +147,8 @@ export const CHAT_BANK = [
 export function normalizeChat(s) {
   const characters = (s.characters || []).slice(0, 6).map((c, i) => ({ name: String(c.name || `Persona ${i + 1}`).slice(0, 24), role: String(c.role || '').slice(0, 40), me: Boolean(c.me), color: c.color || AVATAR_COLORS[i % AVATAR_COLORS.length] }));
   const names = new Set(characters.map((c) => c.name));
-  const messages = (s.messages || []).map((m) => (Array.isArray(m) ? { from: m[0], text: m[1], sfx: m[2] } : { from: m.from, text: m.text, sfx: m.sfx }))
-    .filter((m) => m.text && names.has(m.from)).slice(0, 40).map((m) => ({ from: m.from, text: String(m.text).slice(0, 220), ...(m.sfx && (SFX[m.sfx] || m.sfx === 'none') ? { sfx: m.sfx } : {}) }));
+  const messages = (s.messages || []).map((m) => (Array.isArray(m) ? { from: m[0], text: m[1] } : { from: m.from, text: m.text }))
+    .filter((m) => m.text && names.has(m.from)).slice(0, 40).map((m) => ({ from: m.from, text: String(m.text).slice(0, 220) }));
   return {
     title: s.title || 'Historia en chat', header: s.header || '', characters, messages,
     description: s.description || `${s.title || ''}\n\n¿Te ha pasado algo así? Cuéntalo en los comentarios 👇\n\n#Shorts #Humor #HistoriasEnChat`,
@@ -169,7 +169,7 @@ const SCHEMA = {
   properties: {
     title: { type: 'string' }, header: { type: 'string' }, description: { type: 'string' }, hashtags: { type: 'array', items: { type: 'string' } },
     characters: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['name', 'role', 'me'], properties: { name: { type: 'string' }, role: { type: 'string' }, me: { type: 'boolean' } } } },
-    messages: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['from', 'text', 'sfx'], properties: { from: { type: 'string' }, text: { type: 'string' }, sfx: { type: 'string', enum: ['auto', 'none', 'grillos', 'boing', 'sorpresa', 'boom', 'error', 'drama', 'tension', 'remate', 'triste'] } } } },
+    messages: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['from', 'text'], properties: { from: { type: 'string' }, text: { type: 'string' } } } },
   },
 };
 
@@ -179,7 +179,7 @@ export async function writeChatScript(premise, { tone = 'divertido' } = {}) {
     const s = db.settings;
     const r = await askJson({
       system: `Escribes "historias en chat" ORIGINALES para Shorts/Reels/TikTok del canal "${s.channelName}", en español latino. Formato: una conversación de grupo (2-4 personajes) con mensajes cortos, ritmo rápido, malentendidos y un REMATE final que sorprenda o haga reír. Humor sano y cercano (oficina, amigos, familia, gamers, datos curiosos). Nada de marcas reales en mal plan, personas reales, insultos ni contenido para adultos. Si incluyes un dato curioso, debe ser real.`,
-      prompt: `Premisa: ${premise || 'elige una situación cotidiana muy identificable'}\nTono: ${tone}\n\nEscribe: title (<70 caracteres), header (frase corta entre comillas que resume el chiste, va arriba del chat), characters (2-4; name corto, role opcional tipo "Gerente", me=true solo para quien envía desde la derecha, máximo 1), messages (12-20 mensajes de máximo 90 caracteres; varios seguidos del mismo personaje están bien; el último debe ser el remate; en sfx pon un efecto de sonido SOLO en 3-5 momentos clave de la trama — grillos=silencio incómodo, boing=chiste, sorpresa, boom=impacto, error, drama=dun dun dun, tension, remate=ba-dum-tss en el último, triste=fracaso — y 'none' en los demás), description (con pregunta para comentarios) y hashtags (5-7).`,
+      prompt: `Premisa: ${premise || 'elige una situación cotidiana muy identificable'}\nTono: ${tone}\n\nEscribe: title (<70 caracteres), header (frase corta entre comillas que resume el chiste, va arriba del chat), characters (2-4; name corto, role opcional tipo "Gerente", me=true solo para quien envía desde la derecha, máximo 1), messages (12-20 mensajes de máximo 90 caracteres; varios seguidos del mismo personaje están bien; el último debe ser el remate), description (con pregunta para comentarios) y hashtags (5-7).`,
       schema: SCHEMA,
       effort: 'low',
     });
@@ -335,51 +335,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   return head + ev.join('\n') + '\n';
 }
 
-// ---------- audio: sonidos de mensaje + efectos de trama (sin voces) ----------
-// Todos los efectos se sintetizan con FFmpeg: son originales y libres de derechos.
-export const SFX = {
-  grillos: { label: '🦗 Grillos (silencio incómodo)', d: 2.0, e: '0.18*sin(2*PI*4300*t)*gt(sin(2*PI*28*t),0)*gt(sin(2*PI*1.6*t),0.2)' },
-  boing: { label: '🤪 Boing (chiste)', d: 0.9, e: '0.4*sin(2*PI*(220+120*sin(2*PI*9*t))*t)*exp(-t*2.8)' },
-  sorpresa: { label: '😮 Sorpresa', d: 0.6, e: '0.3*sin(2*PI*(700+900*t/0.5)*t)*exp(-t*2)' },
-  boom: { label: '💥 Impacto', d: 1.4, e: '(0.8*sin(2*PI*(45+110*exp(-t*9))*t)+0.35*(random(0)*2-1)*exp(-t*7))*exp(-t*2.2)' },
-  error: { label: '❌ Error / buzzer', d: 0.55, e: '0.22*if(gt(sin(2*PI*130*t),0),1,-1)*lt(t,0.5)*(1-t/0.55)' },
-  drama: { label: '🎻 Dun dun duuun', d: 2.4, e: '0.5*(lt(t,0.3)*(sin(2*PI*147*t)+0.3*sin(4*PI*147*t))*exp(-t*3)+between(t,0.35,0.65)*(sin(2*PI*139*(t-0.35))+0.3*sin(4*PI*139*(t-0.35)))*exp(-(t-0.35)*3)+gt(t,0.7)*(sin(2*PI*110*(t-0.7))+0.3*sin(4*PI*110*(t-0.7)))*exp(-(t-0.7)*1.2))' },
-  tension: { label: '😬 Tensión', d: 2.0, e: '0.22*sin(2*PI*(90+130*t)*t)*(0.6+0.4*sin(2*PI*7*t))*min(1,t*2)*min(1,(2-t)*3)' },
-  remate: { label: '🥁 Ba-dum-tss (remate)', d: 1.3, e: 'if(lt(t,0.13),0.6*sin(2*PI*190*t)*exp(-t*22),0)+if(between(t,0.15,0.3),0.6*sin(2*PI*150*(t-0.15))*exp(-(t-0.15)*22),0)+if(gt(t,0.32),0.3*(random(0)*2-1)*exp(-(t-0.32)*4.5),0)' },
-  triste: { label: '🎺 Wah wah wah (fracaso)', d: 2.4, e: '0.22*(sin(2*PI*if(lt(t,0.4),392,if(lt(t,0.8),370,if(lt(t,1.2),349,330)))*t)+0.5*sin(4*PI*if(lt(t,0.4),392,if(lt(t,0.8),370,if(lt(t,1.2),349,330)))*t))*if(lt(t,1.2),exp(-mod(t,0.4)*3),exp(-(t-1.2)*0.9)*(1+0.2*sin(2*PI*6*t)))' },
-};
-const BASE_SFX = {
-  recibido: { d: 0.16, e: '0.6*sin(2*PI*(900+1400*exp(-t*40))*t)*exp(-t*28)' },
-  enviado: { d: 0.16, e: '0.4*sin(2*PI*(600+2600*t/0.14)*t)*exp(-t*18)' },
-  tecleo: { d: 0.9, e: '0.2*(random(0)*2-1)*exp(-mod(t,0.11)*90)*lt(mod(t,0.11),0.035)' },
-};
-
-async function sfxFile(name) {
-  const def = SFX[name] || BASE_SFX[name];
+// ---------- audio: solo el sonido de "mensaje enviado" (sin voces ni efectos) ----------
+async function messageSound() {
   const dir = path.join(DIRS.music, '.sfx');
   fs.mkdirSync(dir, { recursive: true });
-  const f = path.join(dir, `${name}.wav`);
-  if (!fs.existsSync(f)) await run(BIN.ffmpeg, ['-y', '-v', 'error', '-f', 'lavfi', '-i', `aevalsrc='${def.e}':s=44100:d=${def.d}`, f]);
+  const f = path.join(dir, 'enviado.wav');
+  if (!fs.existsSync(f)) await run(BIN.ffmpeg, ['-y', '-v', 'error', '-f', 'lavfi', '-i', "aevalsrc='0.4*sin(2*PI*(600+2600*t/0.14)*t)*exp(-t*18)':s=44100:d=0.16", f]);
   return f;
-}
-
-/** Elige efectos automáticamente si el guion no los trae ("auto"). "none" = sin efecto. */
-export function resolveSfx(messages) {
-  let last = -9;
-  return messages.map((m, i) => {
-    if (m.sfx && m.sfx !== 'auto') return m.sfx === 'none' ? null : SFX[m.sfx] ? m.sfx : null;
-    const t = m.text.trim();
-    let pick = null;
-    if (i === messages.length - 1) pick = 'remate';
-    else if (!/[\p{L}\p{N}]/u.test(t)) pick = 'grillos';
-    else if (/(polic[ií]a|explot|choque|boom|bomba)/i.test(t)) pick = 'boom';
-    else if (/(error|no funciona|se cay[oó]|se rompi[oó]|fall[oó]|no prende)/i.test(t)) pick = 'error';
-    else if (/(ja){2,}|jeje|xd\b/i.test(t)) pick = 'boing';
-    else if ((t.match(/\p{Lu}/gu) || []).length >= 4 && t === t.toUpperCase()) pick = 'sorpresa';
-    if (pick && pick !== 'remate' && i - last < 3) pick = null; // no saturar
-    if (pick) last = i;
-    return pick;
-  });
 }
 
 // ---------- render ----------
@@ -392,51 +354,25 @@ export async function renderChat(clip, { onProgress } = {}) {
   const ass = path.join(dir, 'chat.ass');
   fs.writeFileSync(ass, buildChatAss(script, { theme: clip.theme, times, total, handle: s.watermark ? s.handle : '' }));
   const T = CHAT_THEMES[clip.theme] || CHAT_THEMES.oscuro;
-  const meNames = new Set(script.characters.filter((c) => c.me).map((c) => c.name));
-  const plot = resolveSfx(script.messages);
-
-  // lista de sonidos: [nombre, segundo, volumen, duración máx]
-  const events = [];
-  script.messages.forEach((m, i) => {
-    const x = times[i];
-    if (x.typing > 0.3) events.push(['tecleo', x.start - x.typing, 0.5, x.typing]);
-    events.push([meNames.has(m.from) ? 'enviado' : 'recibido', x.start, 0.7, null]);
-    if (plot[i]) events.push([plot[i], x.start + 0.12, 0.9, null]);
-  });
-  const names = [...new Set(events.map((e) => e[0]))];
-  const files = await Promise.all(names.map(sfxFile));
-  const music = musicFile(clip.music ?? 'chill');
-  const args = ['-y', '-v', 'info', '-f', 'lavfi', '-i', `color=c=${T.bg}:s=1080x1920:r=30:d=${total.toFixed(2)}`];
+  const snd = await messageSound();
+  const music = clip.music && clip.music !== 'none' ? musicFile(clip.music) : null; // música opcional (por defecto ninguna)
+  const args = ['-y', '-v', 'info', '-f', 'lavfi', '-i', `color=c=${T.bg}:s=1080x1920:r=30:d=${total.toFixed(2)}`, '-i', snd];
   if (music) args.push('-stream_loop', '-1', '-i', music);
-  const first = music ? 2 : 1;
-  files.forEach((f) => args.push('-i', f));
-
+  const n = times.length;
   const f = [`[0:v]ass=filename='${ffPath(ass)}':fontsdir='${ffPath(DIRS.fonts)}',drawbox=x=0:y=ih-12:w=iw*t/${total.toFixed(2)}:h=12:color=0xC6FF00@0.9:t=fill[v]`];
+  f.push(`[1:a]asplit=${n}${times.map((_, i) => `[p${i}]`).join('')}`);
   const mix = [];
-  names.forEach((name, ni) => {
-    const evs = events.filter((e) => e[0] === name);
-    f.push(`[${first + ni}:a]asplit=${evs.length}${evs.map((_, k) => `[${name}${k}]`).join('')}`);
-    evs.forEach((e, k) => {
-      const ms = Math.max(0, Math.round(e[1] * 1000));
-      f.push(`[${name}${k}]${e[3] ? `atrim=0:${e[3].toFixed(2)},` : ''}volume=${e[2]},adelay=${ms}|${ms}[${name}d${k}]`);
-      mix.push(`[${name}d${k}]`);
-    });
-  });
-  if (music) {
-    // la música baja justo antes del remate para que el chiste pegue
-    const lastT = times[times.length - 1];
-    const a = Math.max(0, lastT.start - lastT.typing - 0.2).toFixed(2);
-    const mv = clamp(clip.musicVolume ?? 0.18, 0, 1);
-    f.push(`[1:a]atrim=0:${total.toFixed(2)},volume='if(gte(t,${a}),${(mv * 0.3).toFixed(3)},${mv})':eval=frame[m]`);
-    mix.push('[m]');
-  }
-  f.push(`${mix.join('')}amix=inputs=${mix.length}:duration=longest:normalize=0,atrim=0:${total.toFixed(2)},loudnorm=I=-14:TP=-1.5:LRA=11,afade=t=out:st=${(total - 0.8).toFixed(2)}:d=0.8[a]`);
+  times.forEach((x, i) => { const ms = Math.round(x.start * 1000); f.push(`[p${i}]volume=0.8,adelay=${ms}|${ms}[pd${i}]`); mix.push(`[pd${i}]`); });
+  if (music) { f.push(`[2:a]atrim=0:${total.toFixed(2)},volume=${clamp(clip.musicVolume ?? 0.15, 0, 1)}[m]`); mix.push('[m]'); }
+  // silencio de base para que el audio dure todo el video
+  f.push(`anullsrc=r=44100:cl=stereo,atrim=0:${total.toFixed(2)}[sil]`);
+  mix.push('[sil]');
+  f.push(`${mix.join('')}amix=inputs=${mix.length}:duration=longest:normalize=0,atrim=0:${total.toFixed(2)},volume=2.2,alimiter=limit=0.9[a]`);
   const out = path.join(dir, 'chat.mp4');
   const tmp = path.join(dir, 'chat.tmp.mp4');
   args.push('-filter_complex', f.join(';'), '-map', '[v]', '-map', '[a]', '-t', total.toFixed(3), ...encodeArgs(tmp));
   await run(BIN.ffmpeg, args, { timeoutMs: 20 * 60000, onLine: (l) => { const m = l.match(/time=(\d+):(\d+):([\d.]+)/); if (m) onProgress?.(clamp(10 + ((+m[1] * 3600 + +m[2] * 60 + +m[3]) / total) * 88, 0, 99), 'Animando el chat'); } });
   fs.renameSync(tmp, out);
-  const n = times.length;
   await makeThumb(out, path.join(dir, 'thumb.jpg'), Math.min(total - 0.5, times[Math.min(3, n - 1)].start + 0.6));
-  return { output: out, thumb: path.join(dir, 'thumb.jpg'), duration: total, times, sfx: plot };
+  return { output: out, thumb: path.join(dir, 'thumb.jpg'), duration: total, times };
 }

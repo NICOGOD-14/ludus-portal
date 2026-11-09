@@ -12,7 +12,7 @@ import { wordsIn } from './pipeline/transcript.js';
 import { ensureMusic, listMusic, MUSIC_MOODS } from './pipeline/music.js';
 import { LAYOUTS } from './pipeline/render.js';
 import { CAPTION_STYLES } from './pipeline/captions.js';
-import { CHAT_THEMES, SFX } from './pipeline/chatstory.js';
+import { CHAT_THEMES } from './pipeline/chatstory.js';
 import { VOICES, useRecording } from './pipeline/tts.js';
 import { fetchSceneImage } from './pipeline/story.js';
 import { startScheduler, runAutomation, AUTOMATION_TYPES } from './scheduler.js';
@@ -64,7 +64,7 @@ function statePayload() {
     analytics: analyticsSummary(),
     secrets: secretStatus(),
     capabilities: { ...caps, llm: llmAvailable(), model: model(), youtubeUpload: youtubeConnected(), publicUrl: getPublicUrl(), hasPassword: Boolean(getSecret('APP_PASSWORD')) },
-    options: { music: listMusic(), moods: MUSIC_MOODS, voices: VOICES, layouts: LAYOUTS, captionStyles: CAPTION_STYLES, chatThemes: Object.fromEntries(Object.entries(CHAT_THEMES).map(([k, v]) => [k, v.label])), sfx: Object.fromEntries(Object.entries(SFX).map(([k, v]) => [k, v.label])) },
+    options: { music: listMusic(), moods: MUSIC_MOODS, voices: VOICES, layouts: LAYOUTS, captionStyles: CAPTION_STYLES, chatThemes: Object.fromEntries(Object.entries(CHAT_THEMES).map(([k, v]) => [k, v.label])) },
   };
 }
 
@@ -224,7 +224,7 @@ app.post('/api/import', wrap(async (req, res) => {
     const { normalizeChat } = await import('./pipeline/chatstory.js');
     const chat = normalizeChat(j);
     if (chat.messages.length < 3) throw new Error('La historia necesita al menos 3 mensajes con personajes que existan en "characters".');
-    const clip = { id: uid('chat_'), kind: 'chat', sourceTitle: 'Escrita con tu Claude', title: chat.title, hook: chat.header, description: chat.description, hashtags: chat.hashtags, chat, theme, music: 'chill', musicVolume: 0.18, status: 'draft', score: 85, version: 0, createdAt: now(), updatedAt: now(), compliance: { risk: 'bajo', notes: ['✅ Historia original escrita con tu Claude.'] } };
+    const clip = { id: uid('chat_'), kind: 'chat', sourceTitle: 'Escrita con tu Claude', title: chat.title, hook: chat.header, description: chat.description, hashtags: chat.hashtags, chat, theme, music: 'none', musicVolume: 0.15, status: 'draft', score: 85, version: 0, createdAt: now(), updatedAt: now(), compliance: { risk: 'bajo', notes: ['✅ Historia original escrita con tu Claude.'] } };
     db.clips.push(clip); save(); emit('clip', clip);
     log('mateo', `Recibí tu guion "${chat.title}" escrito con Claude. Sofía lo anima ya.`);
     return res.json({ clip, job: enqueue('chat_render', { clipId: clip.id }) });

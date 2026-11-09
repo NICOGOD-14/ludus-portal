@@ -33,7 +33,7 @@ const TOOLS = {
     },
   },
   create_chat_story: {
-    description: 'Crea una "historia en chat" ORIGINAL: una conversación de grupo animada mensaje a mensaje (estilo WhatsApp/Slack) con remate final, sin voces: sonidos de notificación y efectos de trama. Ideal para humor de oficina, amigos, familia, gamers o datos curiosos contados como chat. Es el formato más seguro para monetizar.',
+    description: 'Crea una "historia en chat" ORIGINAL: una conversación de grupo animada mensaje a mensaje (estilo WhatsApp/Slack) con remate final, sin voces: solo el sonido de mensaje enviado. Ideal para humor de oficina, amigos, familia, gamers o datos curiosos contados como chat. Es el formato más seguro para monetizar.',
     input_schema: { type: 'object', additionalProperties: false, properties: { premise: { type: 'string', description: 'Situación o idea de la historia' }, tone: { type: 'string', enum: ['divertido', 'misterio', 'drama', 'informativo'] }, theme: { type: 'string', enum: ['oscuro', 'whatsapp', 'imessage', 'ludus'] } } },
     run: ({ premise = '', tone, theme }) => ({ jobId: enqueue('chat', { premise, tone, theme }, { by: 'chat' }).id }),
   },
@@ -128,7 +128,7 @@ function basicReply(agent, text) {
     const premise = text.replace(/.*?(sobre|de|acerca de)\s+/i, '').replace(/[?.!¿¡]/g, '').trim();
     const theme = /whatsapp/.test(t) ? 'whatsapp' : /imessage|iphone/.test(t) ? 'imessage' : 'oscuro';
     TOOLS.create_chat_story.run({ premise: /(sobre|acerca de)/i.test(text) ? premise : '', theme });
-    return `💬 ¡Me encanta! Mateo está escribiendo la historia en chat y Sofía la anima mensaje por mensaje, con sonidos de notificación y efectos que acompañan la trama. La verás en el Estudio.`;
+    return `💬 ¡Me encanta! Mateo está escribiendo la historia en chat y Sofía la anima mensaje por mensaje, con el sonido de mensaje enviado. La verás en el Estudio.`;
   }
   if (/(investiga|dato|curios|tema)/.test(t)) {
     const q = text.replace(/.*?(sobre|acerca de)\s+/i, '').replace(/\s+y\s+(haz|hazme|crea|produce|genera|arma|luego).*$/i, '').replace(/[?.!¿¡]/g, '').trim();

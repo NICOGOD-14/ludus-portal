@@ -199,7 +199,7 @@ const HANDLERS = {
     const chat = await writeChatScript(premise, { tone });
     const clip = {
       id: uid('chat_'), kind: 'chat', sourceTitle: premise || 'Historia original', title: chat.title, hook: chat.header,
-      description: chat.description, hashtags: chat.hashtags, chat, theme, music: 'chill', musicVolume: 0.18,
+      description: chat.description, hashtags: chat.hashtags, chat, theme, music: 'none', musicVolume: 0.15,
       status: 'draft', score: 80, version: 0, createdAt: now(), updatedAt: now(),
       compliance: { risk: 'bajo', notes: ['✅ Historia, personajes y música originales: el formato más seguro para monetizar.', '💡 Si usas nombres de personas o marcas reales, cámbialos antes de publicar.'] },
     };
@@ -258,7 +258,6 @@ const HANDLERS = {
 
 async function doRenderChat(job, clip) {
   updateClip(clip.id, { status: 'rendering' });
-  step(job, 'nico', 'Poniendo sonidos de mensaje y efectos de trama', 10);
   step(job, 'sofia', 'Animando el chat mensaje por mensaje', 15);
   const r = await renderChat(clip, { onProgress: (p) => { job.progress = Math.round(15 + p * 0.83); setAgent('sofia', { progress: p }); emit('job', job); } });
   updateClip(clip.id, { status: 'ready', output: r.output, video: fileUrl(r.output) + `?v=${Date.now()}`, thumb: fileUrl(r.thumb) + `?v=${Date.now()}`, duration: r.duration, version: (clip.version || 0) + 1, renderedAt: now() });

@@ -299,11 +299,11 @@ Reglas:
 - 12 a 20 mensajes cortos (máximo 90 caracteres cada uno), ritmo rápido, malentendidos y un REMATE final que sorprenda o haga reír.
 - Humor sano. Sin personas reales, sin insultos, sin marcas en mal plan. Si metes un dato curioso, que sea real.
 - Como máximo 1 personaje con "me": true (es quien escribe desde la derecha).
-- El video NO tiene voces: solo sonidos de mensaje. En "sfx" pon un efecto SOLO en 3-5 momentos clave: "grillos" (silencio incómodo), "boing" (chiste), "sorpresa", "boom" (impacto), "error", "drama" (dun dun duuun), "tension", "triste" (fracaso), y "remate" (ba-dum-tss) en el último mensaje. En los demás pon "none".
+- El video NO tiene voces: solo el sonido de mensaje enviado.
 - "header" es una frase corta entre comillas que resume el chiste (va arriba del chat).
 
 Responde SOLO con este JSON, sin texto antes ni después:
-{"title":"título para YouTube (máx 70 caracteres)","header":"\"frase gancho\"","characters":[{"name":"Ana","role":"Gerente","me":false},{"name":"Yo","role":"","me":true}],"messages":[{"from":"Ana","text":"...","sfx":"none"},{"from":"Yo","text":"...","sfx":"grillos"}],"description":"descripción con una pregunta para los comentarios","hashtags":["#Shorts","#Humor"]}`;
+{"title":"título para YouTube (máx 70 caracteres)","header":"\"frase gancho\"","characters":[{"name":"Ana","role":"Gerente","me":false},{"name":"Yo","role":"","me":true}],"messages":[{"from":"Ana","text":"..."},{"from":"Yo","text":"..."}],"description":"descripción con una pregunta para los comentarios","hashtags":["#Shorts","#Humor"]}`;
   return `Eres guionista de Shorts de datos curiosos en español latino para el canal "${ch.channelName}". Estilo "novela IA": narración cercana, frases cortas, tensión y un giro.
 
 Tema: ${idea || 'elige un dato curioso REAL y sorprendente (historia, espacio, animales, ciencia, misterios o Latinoamérica)'}

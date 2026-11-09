@@ -442,7 +442,7 @@ function renderChatEditor() {
         <label class="field"><span>Volumen música</span><input type="range" id="c-mvol" min="0" max="0.6" step="0.01" value="${c.musicVolume ?? 0.18}"></label>
       </div>
       <div class="field"><span>Personajes (marca «yo» para quien escribe desde la derecha)</span><div class="stack" id="c-chars"></div><button class="btn small" id="c-addchar" style="align-self:flex-start">+ Personaje</button></div>
-      <div class="field"><span>Mensajes y efectos de sonido (🔔 Automático = el sistema elige; el último lleva ba-dum-tss)</span><div class="stack" id="c-msgs"></div><button class="btn small" id="c-addmsg" style="align-self:flex-start">+ Mensaje</button></div>
+      <div class="field"><span>Mensajes (el último es el remate 🥁)</span><div class="stack" id="c-msgs"></div><button class="btn small" id="c-addmsg" style="align-self:flex-start">+ Mensaje</button></div>
       <label class="field"><span>Descripción</span><textarea id="f-desc" rows="4">${esc(c.description || '')}</textarea></label>
       <label class="field"><span>Hashtags</span><input id="f-tags" value="${esc((c.hashtags || []).join(' '))}"></label>
       ${complianceBox(c)}
@@ -470,7 +470,7 @@ function renderChatLists() {
     <div class="row"><input data-cn="${i}" value="${esc(p.name)}" placeholder="Nombre" style="width:150px"><input data-cr="${i}" value="${esc(p.role)}" placeholder="Rol (opcional)" class="grow"><label><input type="checkbox" data-cm="${i}" ${p.me ? 'checked' : ''}> yo</label><button class="btn small danger" data-cdel="${i}">✕</button></div>`).join('');
   const names = ch.characters.map((p) => p.name);
   $('#c-msgs').innerHTML = ch.messages.map((m, i) => `
-    <div class="row"><select data-mf="${i}" style="width:140px">${names.map((n) => `<option ${n === m.from ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select><input data-mt="${i}" value="${esc(m.text)}" class="grow" maxlength="220"><select data-mx="${i}" style="width:170px" title="Efecto de sonido">${sfxOpts(m.sfx)}</select><button class="btn small" data-mup="${i}" title="Subir">↑</button><button class="btn small danger" data-mdel="${i}">✕</button></div>`).join('');
+    <div class="row"><select data-mf="${i}" style="width:140px">${names.map((n) => `<option ${n === m.from ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select><input data-mt="${i}" value="${esc(m.text)}" class="grow" maxlength="220"><button class="btn small" data-mup="${i}" title="Subir">↑</button><button class="btn small danger" data-mdel="${i}">✕</button></div>`).join('');
   $$('[data-cdel]').forEach((b) => b.addEventListener('click', () => { syncChat(); const n = ch.characters[b.dataset.cdel].name; ch.characters.splice(b.dataset.cdel, 1); ch.messages = ch.messages.filter((m) => m.from !== n); renderChatLists(); }));
   $$('[data-mdel]').forEach((b) => b.addEventListener('click', () => { syncChat(); ch.messages.splice(b.dataset.mdel, 1); renderChatLists(); }));
   $$('[data-mup]').forEach((b) => b.addEventListener('click', () => { syncChat(); const i = +b.dataset.mup; if (i > 0) [ch.messages[i - 1], ch.messages[i]] = [ch.messages[i], ch.messages[i - 1]]; renderChatLists(); }));
@@ -491,8 +491,6 @@ function syncChat() {
     m.from = renames[m.from] || $(`[data-mf="${i}"]`)?.value || m.from;
     if (renames[m.from]) m.from = renames[m.from];
     m.text = $(`[data-mt="${i}"]`)?.value ?? m.text;
-    const fx = $(`[data-mx="${i}"]`)?.value;
-    if (fx != null) { if (fx === 'auto') delete m.sfx; else m.sfx = fx; }
   });
   if ($('#c-header')) ch.header = $('#c-header').value;
   if ($('#c-theme')) draft.theme = $('#c-theme').value;
@@ -555,8 +553,3 @@ function playChat() {
   chatTimer = setTimeout(next, 1400);
 }
 
-function sfxOpts(val) {
-  const o = store.state.options.sfx || {};
-  return `<option value="auto" ${!val || val === 'auto' ? 'selected' : ''}>🔔 Automático</option><option value="none" ${val === 'none' ? 'selected' : ''}>🔕 Solo notificación</option>` +
-    Object.entries(o).map(([k, v]) => `<option value="${k}" ${val === k ? 'selected' : ''}>${esc(v)}</option>`).join('');
-}
