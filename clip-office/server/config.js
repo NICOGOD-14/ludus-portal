@@ -65,10 +65,27 @@ export function secretStatus() {
 export const PORT = Number(process.env.PORT || 4321);
 export const HOST = process.env.HOST || '127.0.0.1';
 export const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
+// En Windows, lo recién instalado con winget/pip a veces no está en el PATH hasta reiniciar: lo buscamos a mano.
+function findWin(exe, globs) {
+  if (process.platform !== 'win32') return null;
+  const L = process.env.LOCALAPPDATA || '', A = process.env.APPDATA || '';
+  const cands = [path.join(ROOT, 'bin', exe), path.join(L, 'Microsoft', 'WinGet', 'Links', exe), `C:\\ffmpeg\\bin\\${exe}`];
+  for (const [base, re, sub] of globs({ L, A })) {
+    try { for (const d of fs.readdirSync(base)) if (re.test(d)) cands.push(...sub(path.join(base, d))); } catch { /* no existe */ }
+  }
+  for (const c of cands) { try { if (fs.statSync(c).isFile()) return c; } catch { /* sigue */ } }
+  return null;
+}
+const ffGlobs = (exe) => ({ L }) => [[path.join(L, 'Microsoft', 'WinGet', 'Packages'), /^Gyan\.FFmpeg/i, (d) => { try { return fs.readdirSync(d).map((x) => path.join(d, x, 'bin', exe)); } catch { return []; } }]];
+const pyGlobs = (exe) => ({ L, A }) => [
+  [path.join(L, 'Programs', 'Python'), /^Python3/i, (d) => [path.join(d, 'Scripts', exe), path.join(d, exe)]],
+  [path.join(A, 'Python'), /^Python3/i, (d) => [path.join(d, 'Scripts', exe)]],
+];
+
 export const BIN = {
-  ffmpeg: process.env.FFMPEG_PATH || 'ffmpeg',
-  ffprobe: process.env.FFPROBE_PATH || 'ffprobe',
-  ytdlp: process.env.YTDLP_PATH || 'yt-dlp',
+  ffmpeg: process.env.FFMPEG_PATH || findWin('ffmpeg.exe', ffGlobs('ffmpeg.exe')) || 'ffmpeg',
+  ffprobe: process.env.FFPROBE_PATH || findWin('ffprobe.exe', ffGlobs('ffprobe.exe')) || 'ffprobe',
+  ytdlp: process.env.YTDLP_PATH || findWin('yt-dlp.exe', pyGlobs('yt-dlp.exe')) || 'yt-dlp',
   edgeTts: process.env.EDGE_TTS_PATH || 'edge-tts',
-  python: process.env.PYTHON_PATH || (process.platform === 'win32' ? 'python' : 'python3'),
+  python: process.env.PYTHON_PATH || (process.platform === 'win32' ? (findWin('python.exe', pyGlobs('python.exe')) || 'python') : 'python3'),
 };

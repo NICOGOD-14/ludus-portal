@@ -21,7 +21,8 @@ if (!fs.existsSync(path.join(ROOT, 'node_modules', 'express'))) {
 }
 ok(`Node ${process.version}`);
 
-if (has('ffmpeg', ['-version'])) ok('FFmpeg');
+const { BIN } = await import('../server/config.js');
+if (has(BIN.ffmpeg, ['-version'])) ok('FFmpeg');
 else {
   bad('FFmpeg no está instalado (es el motor de edición de video).');
   if (win) console.log('     Instálalo con:  winget install --id Gyan.FFmpeg -e   (luego cierra y abre la terminal)');
