@@ -1,0 +1,22 @@
+{
+  "name": "ludus-clip-office",
+  "version": "1.0.0",
+  "description": "Oficina 3D de agentes IA que crean clips verticales para YouTube Shorts, TikTok e Instagram Reels",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/*.test.js",
+    "setup": "node scripts/setup.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "express": "^5.3.0",
+    "three": "^0.187.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

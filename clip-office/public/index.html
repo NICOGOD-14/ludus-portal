@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludus Clip Office</title>
+<meta name="description" content="Oficina 3D de agentes IA que crean clips para YouTube Shorts, TikTok e Instagram Reels">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230A0A0A'/><path d='M22 16l26 16-26 16z' fill='%23C6FF00'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>@font-face { font-family: 'Anton'; src: url('/fonts/Anton-Regular.ttf'); }</style>
+<link rel="stylesheet" href="/css/app.css">
+<script type="importmap">{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">▶</span> Ludus <b>Clip Office</b></div>
+  <nav id="tabs">
+    <button data-tab="office" class="active">🏢 Oficina</button>
+    <button data-tab="studio">🎬 Estudio</button>
+    <button data-tab="stories">🔎 Datos Curiosos</button>
+    <button data-tab="auto">⏰ Automatización</button>
+    <button data-tab="analytics">📈 Analytics</button>
+    <button data-tab="settings">⚙️ Ajustes</button>
+  </nav>
+  <div class="top-status"><span id="mode-pill" class="pill">…</span><span id="jobs-pill" class="pill">0 trabajos</span></div>
+</header>
+
+<main>
+  <!-- OFICINA -->
+  <section id="tab-office" class="tab active">
+    <div id="office-3d"></div>
+    <div class="office-hud">
+      <div class="hud-card quick">
+        <div class="hud-title">Pedido rápido a Valeria</div>
+        <form id="quick-form" class="row">
+          <input id="quick-input" placeholder="Pega un link de YouTube/TikTok o escribe: «investiga datos curiosos del espacio»" autocomplete="off">
+          <button class="btn primary">Enviar</button>
+        </form>
+      </div>
+      <div class="hud-card team" id="team-list"></div>
+      <div class="hud-card feed"><div class="hud-title">Actividad del equipo</div><div id="activity"></div></div>
+    </div>
+    <button id="btn-overview" class="btn ghost overview hidden">↩ Vista general</button>
+    <aside id="agent-panel" class="agent-panel hidden">
+      <button class="close" id="agent-close" aria-label="Cerrar">✕</button>
+      <div class="agent-head">
+        <div class="avatar" id="ap-avatar"></div>
+        <div><h2 id="ap-name"></h2><div class="role" id="ap-role"></div><div class="status" id="ap-status"></div></div>
+      </div>
+      <div class="agent-tabs"><button data-ap="chat" class="active">💬 Chat</button><button data-ap="profile">👤 Perfil</button><button data-ap="work">🛠️ Trabajo</button></div>
+      <div class="ap-body" id="ap-chat">
+        <div class="chat-log" id="chat-log"></div>
+        <form id="chat-form" class="chat-form">
+          <button type="button" id="mic" class="btn icon" title="Hablarle con tu voz">🎙️</button>
+          <input id="chat-input" placeholder="Escríbele o háblale…" autocomplete="off">
+          <button class="btn primary">➤</button>
+        </form>
+        <label class="tiny"><input type="checkbox" id="speak-replies"> Leer respuestas en voz alta</label>
+      </div>
+      <div class="ap-body hidden" id="ap-profile"></div>
+      <div class="ap-body hidden" id="ap-work"></div>
+    </aside>
+  </section>
+
+  <!-- ESTUDIO -->
+  <section id="tab-studio" class="tab">
+    <div class="studio">
+      <div class="studio-left">
+        <div class="card">
+          <h3>Nuevos clips desde un video</h3>
+          <form id="new-clips" class="stack">
+            <input name="url" placeholder="https://www.youtube.com/watch?v=… (o TikTok, Twitch, Kick, X, MP4)">
+            <div class="row">
+              <label>Clips <input name="count" type="number" min="1" max="12" value="5"></label>
+              <label>Segundos <input name="seconds" type="number" min="8" max="90" value="35"></label>
+              <button class="btn primary grow">✂️ Crear</button>
+            </div>
+          </form>
+          <div class="or">o sube tu propio gameplay (lo más seguro para monetizar)</div>
+          <label class="dropzone" id="dropzone"><input type="file" id="file-input" accept="video/*" hidden><span>📁 Arrastra un video aquí o haz clic</span></label>
+          <div id="upload-progress" class="tiny"></div>
+        </div>
+        <div class="filters row">
+          <select id="clip-filter"><option value="">Todos</option><option value="gameplay">Clips</option><option value="story">Datos curiosos</option><option value="ready">Listos</option><option value="approved">Aprobados</option><option value="published">Publicados</option></select>
+          <span class="tiny" id="clip-count"></span>
+        </div>
+        <div id="clip-list" class="clip-list"></div>
+      </div>
+      <div class="studio-right" id="editor"><div class="empty">Elige un clip para previsualizarlo y editarlo ✨</div></div>
+    </div>
+  </section>
+
+  <!-- DATOS CURIOSOS -->
+  <section id="tab-stories" class="tab">
+    <div class="page">
+      <div class="card">
+        <h3>🔎 Lucía investiga temas</h3>
+        <form id="research-form" class="row">
+          <input name="query" class="grow" placeholder="Tema (ej. «misterios del Perú», «espacio», «animales raros») — vacío = sorpresa">
+          <label>Cantidad <input name="count" type="number" min="1" max="10" value="6"></label>
+          <button class="btn primary">Investigar</button>
+        </form>
+        <details class="tiny"><summary>Agregar un tema manualmente</summary>
+          <form id="topic-form" class="stack">
+            <input name="title" placeholder="El dato en una frase" required>
+            <textarea name="summary" rows="3" placeholder="Contexto, cifras, explicación"></textarea>
+            <input name="source" placeholder="Fuente (URL)">
+            <button class="btn">Guardar tema</button>
+          </form>
+        </details>
+      </div>
+      <div id="topic-list" class="topic-grid"></div>
+    </div>
+  </section>
+
+  <!-- AUTOMATIZACIÓN -->
+  <section id="tab-auto" class="tab">
+    <div class="page">
+      <div class="card">
+        <h3>⏰ El equipo trabaja 24/7</h3>
+        <p class="muted">Mientras este programa esté abierto, cada regla activa se ejecuta sola. Para que funcione de verdad 24/7, déjalo corriendo en una PC encendida o en un servidor (ver README).</p>
+        <form id="auto-form" class="row wrap">
+          <select name="type"><option value="scout">📡 Cazar videos y hacer clips</option><option value="research">🔎 Investigar y producir datos curiosos</option><option value="analytics">📈 Actualizar métricas</option></select>
+          <input name="name" placeholder="Nombre">
+          <input name="query" placeholder="Búsqueda (ej. GTA 6 gameplay)">
+          <label>Cada <input name="intervalMin" type="number" value="180" min="15"> min</label>
+          <button class="btn primary">Agregar regla</button>
+        </form>
+      </div>
+      <div id="auto-list" class="stack"></div>
+      <div class="card"><h3>Cola de trabajos</h3><div id="job-list" class="job-list"></div></div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="tab-analytics" class="tab">
+    <div class="page" id="analytics"></div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="tab-settings" class="tab">
+    <div class="page" id="settings"></div>
+  </section>
+</main>
+
+<div id="toasts"></div>
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
