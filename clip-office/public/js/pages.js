@@ -35,6 +35,20 @@ function initStories() {
       toast('💬 Mateo está escribiendo la historia; aparecerá en el Estudio.');
     } catch (err) { toast(err.message, true); }
   });
+  $('#byo-copy').addEventListener('click', async () => {
+    const txt = byoPrompt($('#byo-type').value, $('#byo-idea').value.trim());
+    try { await navigator.clipboard.writeText(txt); toast('📋 Copiado. Pégalo en claude.ai y luego trae su respuesta aquí.'); } catch { $('#byo-paste').value = txt; toast('Copia el texto del cuadro y pégalo en claude.ai'); }
+  });
+  $('#byo-type').addEventListener('change', () => { const chat = $('#byo-type').value === 'chat'; $('#byo-theme').classList.toggle('hidden', !chat); $('#byo-voices').parentElement.classList.toggle('hidden', !chat); });
+  $('#byo-go').addEventListener('click', async () => {
+    const text = $('#byo-paste').value.trim();
+    if (!text) return toast('Pega primero la respuesta de Claude', true);
+    try {
+      await api('/api/import', { body: { type: $('#byo-type').value, text, theme: $('#byo-theme').value, voices: $('#byo-voices').checked } });
+      $('#byo-paste').value = '';
+      toast('🎬 ¡Recibido! El equipo lo está produciendo; lo verás en el Estudio.');
+    } catch (e) { toast(e.message, true); }
+  });
   $('#topic-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -274,4 +288,32 @@ function renderSettings() {
     if (!Object.keys(body).length) return toast('No escribiste ninguna clave nueva');
     try { await api('/api/secrets', { method: 'PUT', body }); await reload(); renderSettings(); toast('🔑 Claves guardadas'); } catch (e) { toast(e.message, true); }
   });
+}
+
+function byoPrompt(type, idea) {
+  const ch = store.state.settings;
+  if (type === 'chat') return `Eres guionista de Shorts virales en español latino para el canal "${ch.channelName}". Escribe una "historia en chat" ORIGINAL: una conversación de grupo (2-4 personajes) que se muestra mensaje a mensaje en un video vertical.
+
+Idea: ${idea || 'elige una situación cotidiana muy identificable (oficina, amigos, familia o gamers)'}
+
+Reglas:
+- 12 a 20 mensajes cortos (máximo 90 caracteres cada uno), ritmo rápido, malentendidos y un REMATE final que sorprenda o haga reír.
+- Humor sano. Sin personas reales, sin insultos, sin marcas en mal plan. Si metes un dato curioso, que sea real.
+- Como máximo 1 personaje con "me": true (es quien escribe desde la derecha).
+- "header" es una frase corta entre comillas que resume el chiste (va arriba del chat).
+
+Responde SOLO con este JSON, sin texto antes ni después:
+{"title":"título para YouTube (máx 70 caracteres)","header":"\"frase gancho\"","characters":[{"name":"Ana","role":"Gerente","me":false},{"name":"Yo","role":"","me":true}],"messages":[{"from":"Ana","text":"..."},{"from":"Yo","text":"..."}],"description":"descripción con una pregunta para los comentarios","hashtags":["#Shorts","#Humor"]}`;
+  return `Eres guionista de Shorts de datos curiosos en español latino para el canal "${ch.channelName}". Estilo "novela IA": narración cercana, frases cortas, tensión y un giro.
+
+Tema: ${idea || 'elige un dato curioso REAL y sorprendente (historia, espacio, animales, ciencia, misterios o Latinoamérica)'}
+
+Reglas:
+- Solo datos REALES y verificables; incluye la URL de una fuente confiable en "source".
+- "hook": la primera frase, que atrape en menos de 2 segundos (pregunta o afirmación increíble).
+- 4 a 6 "scenes" (en total ~110 palabras narradas). En cada una: "text" = lo que dice el narrador; "visual" = descripción EN INGLÉS de una ilustración 3D cinematográfica vertical para esa escena; "query" = 2-3 palabras en inglés para buscar una foto real.
+- "cta": cierre que invite a seguir el canal o comentar. "badge": 1-3 palabras en MAYÚSCULAS para arriba del video.
+
+Responde SOLO con este JSON, sin texto antes ni después:
+{"title":"título (máx 70 caracteres)","hook":"...","scenes":[{"text":"...","visual":"...","query":"..."}],"cta":"...","badge":"DATO CURIOSO","source":"https://...","category":"Espacio","description":"descripción con la fuente","hashtags":["#DatosCuriosos","#Shorts"]}`;
 }

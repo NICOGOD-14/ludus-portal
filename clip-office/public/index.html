@@ -105,6 +105,18 @@
           <button class="btn primary">✍️ Crear historia</button>
         </form>
       </div>
+      <div class="card" id="byo-claude">
+        <h3>🤝 Usar mi Claude (claude.ai) — sin API key</h3>
+        <p class="tiny" style="margin-bottom:10px">1) Elige qué quieres y escribe la idea · 2) «Copiar instrucción» y pégala en <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a> · 3) Copia TODA la respuesta de Claude, pégala abajo y dale a «Crear video».</p>
+        <div class="row wrap">
+          <select id="byo-type"><option value="chat">💬 Historia en chat</option><option value="story">🔎 Dato curioso con voz e imágenes</option></select>
+          <input id="byo-idea" class="grow" placeholder="Idea o tema (ej. «mi amigo cree que GTA 6 sale mañana» o «misterios del océano»)">
+          <select id="byo-theme"><option value="oscuro">Oscuro</option><option value="whatsapp">WhatsApp</option><option value="imessage">iMessage</option><option value="ludus">Ludus neón</option></select>
+          <button class="btn" id="byo-copy">📋 Copiar instrucción</button>
+        </div>
+        <textarea id="byo-paste" rows="5" style="width:100%;margin-top:10px" placeholder="Pega aquí la respuesta completa de Claude…"></textarea>
+        <div class="row" style="margin-top:8px"><label><input type="checkbox" id="byo-voices"> Voces por personaje</label><button class="btn primary" id="byo-go" style="margin-left:auto">🎬 Crear video</button></div>
+      </div>
       <div class="card">
         <h3>🔎 Lucía investiga temas</h3>
         <form id="research-form" class="row">

@@ -62,6 +62,86 @@ export const CHAT_BANK = [
       ['Yo', 'ma son las 2 de la mañana'], ['Mamá', 'un videito más'], ['Mamá', 'ya sigo tu canal, ¿por qué tienes tan pocos likes?'], ['Yo', 'dale like ma 😭'],
     ],
   },
+  {
+    title: 'El primo que "sabe de computadoras" 💻',
+    header: '"Mi primo sabe de computadoras"',
+    characters: [{ name: 'Tía Rosa', role: '' }, { name: 'Kevin', role: 'el primo "experto"' }, { name: 'Yo', role: '', me: true }],
+    messages: [
+      ['Tía Rosa', 'Kevin mi compu no prende'], ['Kevin', '¿la enchufó tía?'], ['Tía Rosa', 'claro hijo, no soy tonta'], ['Kevin', 'ok ¿y el botón de encender?'],
+      ['Tía Rosa', 'ese no lo he tocado'], ['Kevin', 'tía ese es el que prende la compu'], ['Tía Rosa', 'AH'], ['Tía Rosa', 'ya prendió'],
+      ['Tía Rosa', 'eres un genio Kevin'], ['Tía Rosa', 'le voy a decir a todos que arreglas computadoras'], ['Kevin', 'no tía por favor'], ['Yo', 'Kevin ya tienes 14 clientes en el grupo familiar'],
+    ],
+  },
+  {
+    title: 'El gamer y la mamá a la hora de comer 🎮',
+    header: '"Un ratito más"',
+    characters: [{ name: 'Mamá', role: '' }, { name: 'Leo', role: 'gamer', me: true }],
+    messages: [
+      ['Mamá', 'Leo a comer'], ['Leo', '5 minutos ma, estoy en una partida'], ['Mamá', 'hace 5 minutos dijiste 5 minutos'], ['Leo', 'es que no se puede pausar'],
+      ['Mamá', '¿no se puede pausar?'], ['Leo', 'es online ma'], ['Mamá', 'ok'], ['Mamá', 'el wifi tampoco se puede pausar?'],
+      ['Leo', '...'], ['Leo', 'ya voy'], ['Mamá', 'qué rápido se pausa todo cuando quieres'],
+    ],
+  },
+  {
+    title: 'La reunión que pudo ser un correo 📧',
+    header: '"Reunión rápida de 5 minutos"',
+    characters: [{ name: 'Jefe', role: 'Gerente' }, { name: 'Lucía', role: 'Diseño' }, { name: 'Andrés', role: 'Ventas' }],
+    messages: [
+      ['Jefe', 'equipo, reunión rápida de 5 minutos a las 3'], ['Lucía', 'ok'], ['Andrés', 'ok'], ['Jefe', 'ya vamos 1 hora, ¿alguna pregunta?'],
+      ['Andrés', 'sí, ¿de qué era la reunión?'], ['Jefe', 'para decidir cuándo hacemos la reunión del proyecto'], ['Lucía', '¿y cuándo es?'],
+      ['Jefe', 'lo vemos en la próxima reunión'], ['Andrés', '¿puede ser un correo?'], ['Jefe', 'excelente idea Andrés'], ['Jefe', 'agendemos una reunión para hablar de eso'],
+    ],
+  },
+  {
+    title: 'Le pregunté a mi abuelo por la IA 🤖',
+    header: '"Abuelo, ¿sabes qué es la IA?"',
+    characters: [{ name: 'Abuelo', role: '' }, { name: 'Yo', role: '', me: true }],
+    messages: [
+      ['Yo', 'abuelo ¿sabes qué es la inteligencia artificial?'], ['Abuelo', 'claro, la usé ayer'], ['Yo', '¿en serio? ¿para qué?'], ['Abuelo', 'le pregunté a la tele qué tiempo hacía'],
+      ['Yo', 'abuelo eso era el noticiero'], ['Abuelo', 'pues me respondió'], ['Yo', 'jajaja'], ['Abuelo', 'y me dijo que lloverá el jueves'],
+      ['Abuelo', 'si llueve el jueves, es inteligente'], ['Yo', 'buen punto la verdad'],
+    ],
+  },
+  {
+    title: 'El amigo que nunca paga 💸',
+    header: '"Te pago el lunes"',
+    characters: [{ name: 'Beto', role: 'el que nunca paga' }, { name: 'Caro', role: '' }, { name: 'Yo', role: '', me: true }],
+    messages: [
+      ['Yo', 'Beto, ¿y los 20 soles de la pizza?'], ['Beto', 'te pago el lunes'], ['Yo', 'eso dijiste hace 3 lunes'], ['Beto', 'nunca dije cuál lunes'],
+      ['Caro', 'JAJAJA'], ['Yo', 'Beto'], ['Beto', 'ok ok te pago hoy'], ['Beto', 'te mandé algo'], ['Yo', 'me mandaste un sticker de un billete'],
+      ['Beto', 'cuenta como pago simbólico'], ['Caro', 'aprendan, eso es un genio financiero'],
+    ],
+  },
+  {
+    title: 'El dato de la miel que no se malogra 🍯',
+    header: '"La miel nunca se malogra"',
+    characters: [{ name: 'Profe', role: 'Ciencias' }, { name: 'Mati', role: 'alumno' }, { name: 'Vale', role: 'alumna' }],
+    messages: [
+      ['Profe', 'dato para el examen: la miel prácticamente no se malogra'], ['Mati', '¿ni en mil años?'], ['Profe', 'encontraron miel en tumbas egipcias de miles de años'],
+      ['Vale', '¿y se podía comer?'], ['Profe', 'tiene muy poca agua y es ácida, así que las bacterias no crecen'], ['Mati', 'entonces la miel de mi abuela del 2009 está bien'],
+      ['Profe', 'probablemente sí'], ['Mati', 'ok'], ['Mati', 'el pan de al lado no tanto'], ['Vale', 'Mati bota ese pan'],
+    ],
+  },
+  {
+    title: 'La llamada de soporte técnico 🛠️',
+    header: '"Soporte técnico, ¿en qué le ayudo?"',
+    characters: [{ name: 'Soporte', role: 'Mesa de ayuda' }, { name: 'Señor', role: 'cliente' }],
+    messages: [
+      ['Señor', 'mi internet no funciona'], ['Soporte', 'entiendo, ¿qué luces ve en el router?'], ['Señor', 'ninguna'], ['Soporte', '¿está enchufado?'],
+      ['Señor', 'no sé, está oscuro'], ['Soporte', '¿puede prender la luz?'], ['Señor', 'no hay luz en todo el barrio'], ['Soporte', '...'],
+      ['Soporte', 'señor, ¿cómo me está escribiendo?'], ['Señor', 'con los datos del celular'], ['Soporte', 'entonces su internet sí funciona'], ['Señor', 'GRACIAS, problema resuelto ⭐⭐⭐⭐⭐'],
+    ],
+  },
+  {
+    title: 'Cuando por fin sale el tráiler 🎬',
+    header: '"SALIÓ EL TRÁILER"',
+    characters: [{ name: 'Nico', role: 'fan número 1' }, { name: 'Sami', role: '' }, { name: 'Yo', role: '', me: true }],
+    messages: [
+      ['Nico', 'SALIÓ EL TRÁILER'], ['Nico', 'SALIÓ'], ['Nico', 'EL'], ['Nico', 'TRÁILER'], ['Sami', '¿de qué juego?'],
+      ['Nico', 'no importa, ¡SALIÓ!'], ['Yo', 'Nico es el tráiler de una película de 2019'], ['Nico', 'para mí es nuevo'], ['Sami', 'respeto eso'],
+      ['Nico', 'igual voy a analizar cada frame'], ['Yo', 'ya lo analizaste hace 5 años'], ['Nico', 'y encontré cosas nuevas 👀'],
+    ],
+  },
 ];
 
 export function normalizeChat(s) {
@@ -274,11 +354,18 @@ export async function synthesizeChatVoices(script, dir) {
     const m = script.messages[i];
     const txt = path.join(dir, `m${i}.txt`);
     const mp3 = path.join(dir, `m${i}.mp3`);
-    const clean = m.text.replace(/[\p{Extended_Pictographic}]/gu, '').trim() || '...';
+    const clean = m.text.replace(/[\p{Extended_Pictographic}]/gu, '').trim();
+    // mensajes sin palabras ("...", "jajaja" solo con signos) van sin voz
+    if (!/[\p{L}\p{N}]/u.test(clean)) { files.push({ file: null, duration: null }); continue; }
     fs.writeFileSync(txt, clean);
-    await run(BIN.python, [path.join(ROOT, 'scripts', 'tts.py'), voiceOf[m.from], '+10%', txt, mp3, path.join(dir, `m${i}.json`)], { timeoutMs: 120000 });
-    const { duration } = await probe(mp3);
-    files.push({ file: mp3, duration });
+    try {
+      await run(BIN.python, [path.join(ROOT, 'scripts', 'tts.py'), voiceOf[m.from], '+10%', txt, mp3, path.join(dir, `m${i}.json`)], { timeoutMs: 120000 });
+      const { duration } = await probe(mp3);
+      files.push({ file: mp3, duration });
+    } catch (e) {
+      console.warn(`[voz chat ${i}]`, e.message.slice(0, 120));
+      files.push({ file: null, duration: null });
+    }
   }
   return files;
 }
@@ -302,13 +389,14 @@ export async function renderChat(clip, { onProgress } = {}) {
   const music = musicFile(clip.music ?? 'chill');
   const args = ['-y', '-v', 'info', '-f', 'lavfi', '-i', `color=c=${T.bg}:s=1080x1920:r=30:d=${total.toFixed(2)}`, '-i', pop];
   if (music) args.push('-stream_loop', '-1', '-i', music);
-  const vIdx = (voices || []).map((v, i) => { args.push('-i', v.file); return (music ? 3 : 2) + i; });
+  let nextInput = music ? 3 : 2;
+  const vIdx = (voices || []).map((v) => { if (!v.file) return null; args.push('-i', v.file); return nextInput++; });
   const n = times.length;
   const f = [`[0:v]ass=filename='${ffPath(ass)}':fontsdir='${ffPath(DIRS.fonts)}',drawbox=x=0:y=ih-12:w=iw*t/${total.toFixed(2)}:h=12:color=0xC6FF00@0.9:t=fill[v]`];
   f.push(`[1:a]asplit=${n}${times.map((_, i) => `[p${i}]`).join('')}`);
   const mix = [];
   times.forEach((x, i) => { f.push(`[p${i}]adelay=${Math.round(x.start * 1000)}|${Math.round(x.start * 1000)},volume=${clip.voices ? 0.35 : 0.6}[pd${i}]`); mix.push(`[pd${i}]`); });
-  vIdx.forEach((idx, i) => { const ms = Math.round((times[i].start + 0.05) * 1000); f.push(`[${idx}:a]adelay=${ms}|${ms}[vd${i}]`); mix.push(`[vd${i}]`); });
+  vIdx.forEach((idx, i) => { if (idx == null) return; const ms = Math.round((times[i].start + 0.05) * 1000); f.push(`[${idx}:a]adelay=${ms}|${ms}[vd${i}]`); mix.push(`[vd${i}]`); });
   if (music) { f.push(`[2:a]atrim=0:${total.toFixed(2)},volume=${clamp(clip.musicVolume ?? 0.18, 0, 1)}[m]`); mix.push('[m]'); }
   f.push(`${mix.join('')}amix=inputs=${mix.length}:duration=longest:normalize=0,atrim=0:${total.toFixed(2)},loudnorm=I=-14:TP=-1.5:LRA=11,afade=t=out:st=${(total - 0.8).toFixed(2)}:d=0.8[a]`);
   const out = path.join(dir, 'chat.mp4');

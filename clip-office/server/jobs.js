@@ -80,6 +80,8 @@ async function exec(job) {
     job.error = e.message;
     job.step = 'Error';
     if (job.agent) agentError(job.agent, e.message.slice(0, 140));
+    const c = job.payload?.clipId && findClip(job.payload.clipId);
+    if (c && c.status === 'rendering') updateClip(c.id, { status: c.output ? 'ready' : 'draft' });
     log('valeria', `El trabajo "${job.label}" falló: ${e.message.slice(0, 160)}`);
   }
   job.finishedAt = now();

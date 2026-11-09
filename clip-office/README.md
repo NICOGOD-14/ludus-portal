@@ -87,6 +87,8 @@ Qué pasa: Diego descarga → Bruno transcribe → Sofía detecta los momentos c
 
 **Historias en chat (💬, en la pestaña Datos y Chats):** escribe una idea ("el jefe descubre que el practicante usa IA") o déjala vacía. Mateo escribe una conversación original con remate final y Sofía la anima mensaje por mensaje: indicador "escribiendo…", scroll, sonido de notificación y música. Hay 4 estilos (oscuro tipo oficina, WhatsApp, iMessage y Ludus neón) y la opción de poner una **voz distinta a cada personaje**. En el Estudio puedes editar personajes y mensajes, reordenarlos y ver la vista previa en vivo antes de renderizar. Es contenido 100% original, el formato más seguro para monetizar. También puedes pedírsela a Valeria: "hazme una historia en chat estilo WhatsApp sobre…".
 
+**🤝 Usar tu Claude (claude.ai) sin API key:** en *Datos y Chats* elige "historia en chat" o "dato curioso", escribe la idea y dale a **Copiar instrucción**. Pégala en [claude.ai](https://claude.ai), copia TODA la respuesta, pégala en el cuadro y dale a **Crear video**. El equipo lo produce igual que si tuviera la API key (imágenes IA, voz, subtítulos y música). Así aprovechas tu suscripción de Claude mientras no tengas API key.
+
 **Hablarle a un agente:** clic en su escritorio (o en la lista). Pestañas: 💬 Chat (con 🎙️ para dictar por voz y opción de escuchar la respuesta), 👤 Perfil (habilidades y qué pedirle) y 🛠️ Trabajo (lo que hace ahora y su bitácora).
 
 ---

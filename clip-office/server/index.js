@@ -210,6 +210,39 @@ app.post('/api/clips/:id/voice', express.raw({ type: '*/*', limit: '200mb' }), w
 }));
 
 // ---------- temas ----------
+// ---------- usar tu Claude (claude.ai) sin API key: pegar el JSON que te dio ----------
+function parseLooseJson(text) {
+  const t = String(text || '').replace(/```(?:json)?/g, '');
+  const a = t.indexOf('{'), z = t.lastIndexOf('}');
+  if (a < 0 || z <= a) throw new Error('No encontré un JSON en lo que pegaste. Copia la respuesta completa de Claude.');
+  try { return JSON.parse(t.slice(a, z + 1)); } catch (e) { throw new Error(`El JSON tiene un error: ${e.message}`); }
+}
+app.post('/api/import', wrap(async (req, res) => {
+  const { type, text, theme = 'oscuro', voices = false } = req.body;
+  const j = parseLooseJson(text);
+  if (type === 'chat') {
+    const { normalizeChat } = await import('./pipeline/chatstory.js');
+    const chat = normalizeChat(j);
+    if (chat.messages.length < 3) throw new Error('La historia necesita al menos 3 mensajes con personajes que existan en "characters".');
+    const clip = { id: uid('chat_'), kind: 'chat', sourceTitle: 'Escrita con tu Claude', title: chat.title, hook: chat.header, description: chat.description, hashtags: chat.hashtags, chat, theme, voices: Boolean(voices), music: 'chill', musicVolume: 0.18, status: 'draft', score: 85, version: 0, createdAt: now(), updatedAt: now(), compliance: { risk: 'bajo', notes: ['✅ Historia original escrita con tu Claude.'] } };
+    db.clips.push(clip); save(); emit('clip', clip);
+    log('mateo', `Recibí tu guion "${chat.title}" escrito con Claude. Sofía lo anima ya.`);
+    return res.json({ clip, job: enqueue('chat_render', { clipId: clip.id }) });
+  }
+  if (type === 'story') {
+    const scenes = (j.scenes || []).filter((x) => x?.text).slice(0, 8).map((x) => ({ text: String(x.text), visual: String(x.visual || x.text), query: String(x.query || '') }));
+    if (!j.hook || scenes.length < 2) throw new Error('El guion necesita "hook" y al menos 2 "scenes".');
+    const topic = { id: uid('top_'), title: String(j.title || j.hook).slice(0, 140), summary: scenes.map((x) => x.text).join(' ').slice(0, 800), source: String(j.source || ''), category: String(j.category || 'General'), viralScore: 85, method: 'tu Claude', status: 'en producción', createdAt: now() };
+    db.topics.push(topic);
+    const script = { title: topic.title, hook: String(j.hook), scenes, cta: String(j.cta || 'Síguenos para más datos que no te enseñaron en el colegio.'), badge: String(j.badge || 'DATO CURIOSO').toUpperCase().slice(0, 24), description: String(j.description || `${topic.title}\n\n📚 Fuente: ${topic.source || '—'}`), hashtags: Array.isArray(j.hashtags) ? j.hashtags : ['#DatosCuriosos', '#Shorts'] };
+    const clip = { id: uid('story_'), kind: 'story', topicId: topic.id, sourceTitle: topic.title, sourceUrl: topic.source, title: script.title, hook: script.hook, description: script.description, hashtags: script.hashtags, script, scenes: scenes.map((x) => ({ ...x })), voice: db.settings.voice, music: 'misterio', musicVolume: 0.1, captionStyle: db.settings.captionStyle, status: 'draft', score: 85, version: 0, createdAt: now(), updatedAt: now() };
+    db.clips.push(clip); save(); emit('clip', clip); emit('topic', topic);
+    log('mateo', `Recibí tu guion "${script.title}" escrito con Claude. Camila hace las imágenes y Nico la voz.`);
+    return res.json({ clip, job: enqueue('story_render', { clipId: clip.id, images: true, voice: true }) });
+  }
+  throw new Error('Tipo no válido');
+}));
+
 app.post('/api/topics', wrap(async (req, res) => {
   const { title, summary = '', source = '', category = 'General' } = req.body;
   if (!title) throw new Error('Falta el título');

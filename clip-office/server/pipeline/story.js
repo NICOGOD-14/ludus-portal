@@ -4,7 +4,7 @@ import path from 'node:path';
 import { BIN, DIRS, getSecret } from '../config.js';
 import { db } from '../db.js';
 import { askJson, llmAvailable } from '../llm.js';
-import { run, download, fetchJson, clamp } from '../util.js';
+import { run, download, fetchJson, clamp, sleep } from '../util.js';
 import { buildAss } from './captions.js';
 import { musicFile } from './music.js';
 import { encodeArgs, overlayChain, makeThumb } from './render.js';
@@ -116,7 +116,12 @@ export async function fetchSceneImage(scene, i, dir, { source = 'auto', topicIma
   for (const s of order) {
     try {
       let r;
-      if (s === 'topic') { await download(topicImage, file, { minBytes: 5000 }); r = { credit: 'Wikipedia / Wikimedia Commons' }; } else if (s === 'ai') r = await aiImage(scene.visual || scene.text, file, 1000 + i * 17 + Math.floor(Math.random() * 999));
+      if (s === 'topic') { await download(topicImage, file, { minBytes: 5000 }); r = { credit: 'Wikipedia / Wikimedia Commons' }; } else if (s === 'ai') {
+        // el servicio gratis limita pedidos seguidos: reintenta con pausas antes de pasar a fotos
+        for (let a = 0; a < 3 && !r; a++) {
+          try { r = await aiImage(scene.visual || scene.text, file, 1000 + i * 17 + Math.floor(Math.random() * 999)); } catch (e) { if (a === 2) throw e; await sleep(4000 * (a + 1)); }
+        }
+      }
       else if (s === 'commons') r = await commonsImage(scene.query || scene.visual, file);
       else r = await pexelsImage(scene.query || scene.visual, file);
       return { image: file, credit: r.credit };
