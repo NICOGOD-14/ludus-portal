@@ -12,6 +12,7 @@ import { wordsIn } from './pipeline/transcript.js';
 import { ensureMusic, listMusic, MUSIC_MOODS } from './pipeline/music.js';
 import { LAYOUTS } from './pipeline/render.js';
 import { CAPTION_STYLES } from './pipeline/captions.js';
+import { CHAT_THEMES } from './pipeline/chatstory.js';
 import { VOICES, useRecording } from './pipeline/tts.js';
 import { fetchSceneImage } from './pipeline/story.js';
 import { startScheduler, runAutomation, AUTOMATION_TYPES } from './scheduler.js';
@@ -59,7 +60,7 @@ function statePayload() {
     analytics: analyticsSummary(),
     secrets: secretStatus(),
     capabilities: { ...caps, llm: llmAvailable(), model: model(), youtubeUpload: youtubeConnected() },
-    options: { music: listMusic(), moods: MUSIC_MOODS, voices: VOICES, layouts: LAYOUTS, captionStyles: CAPTION_STYLES },
+    options: { music: listMusic(), moods: MUSIC_MOODS, voices: VOICES, layouts: LAYOUTS, captionStyles: CAPTION_STYLES, chatThemes: Object.fromEntries(Object.entries(CHAT_THEMES).map(([k, v]) => [k, v.label])) },
   };
 }
 
@@ -84,7 +85,7 @@ app.post('/api/chat/:agent', wrap(async (req, res) => {
 app.delete('/api/chat/:agent', (req, res) => { db.chats[req.params.agent] = []; save(); res.json({ ok: true }); });
 
 // ---------- trabajos ----------
-const ALLOWED_JOBS = new Set(['clips', 'render', 'research', 'story', 'story_render', 'scout', 'analytics', 'publish']);
+const ALLOWED_JOBS = new Set(['clips', 'render', 'research', 'story', 'story_render', 'chat', 'chat_render', 'scout', 'analytics', 'publish']);
 app.post('/api/jobs', wrap(async (req, res) => {
   const { type, payload } = req.body;
   if (!ALLOWED_JOBS.has(type)) throw new Error('Tipo de trabajo no válido');
@@ -113,7 +114,7 @@ app.post('/api/upload', express.raw({ type: '*/*', limit: '4gb' }), wrap(async (
 }));
 
 // ---------- clips ----------
-const EDITABLE = ['hook', 'title', 'description', 'hashtags', 'start', 'end', 'captionStyle', 'layout', 'cropX', 'zoom', 'music', 'musicVolume', 'originalVolume', 'commentary', 'showCommentary', 'words', 'captionY', 'voice', 'scenes', 'status', 'notes'];
+const EDITABLE = ['hook', 'title', 'description', 'hashtags', 'start', 'end', 'captionStyle', 'layout', 'cropX', 'zoom', 'music', 'musicVolume', 'originalVolume', 'commentary', 'showCommentary', 'words', 'captionY', 'voice', 'scenes', 'status', 'notes', 'theme', 'voices'];
 app.patch('/api/clips/:id', wrap(async (req, res) => {
   const c = findClip(req.params.id);
   if (!c) throw new Error('No existe');
@@ -126,6 +127,11 @@ app.patch('/api/clips/:id', wrap(async (req, res) => {
     const wf = src && path.join(src.dir, 'words.json');
     if (wf && fs.existsSync(wf)) patch.words = wordsIn(JSON.parse(fs.readFileSync(wf, 'utf8')), Number(patch.start ?? c.start), Number(patch.end ?? c.end));
   }
+  if (c.kind === 'chat' && req.body.chat) {
+    const { normalizeChat } = await import('./pipeline/chatstory.js');
+    patch.chat = normalizeChat({ ...c.chat, ...req.body.chat, title: patch.title ?? c.title });
+    patch.hook = patch.chat.header;
+  }
   if (c.kind === 'story' && (patch.hook != null)) c.script.hook = patch.hook;
   if (c.kind === 'story' && req.body.cta != null) c.script.cta = String(req.body.cta);
   res.json(updateClip(c.id, patch));
@@ -133,7 +139,7 @@ app.patch('/api/clips/:id', wrap(async (req, res) => {
 app.post('/api/clips/:id/render', wrap(async (req, res) => {
   const c = findClip(req.params.id);
   if (!c) throw new Error('No existe');
-  res.json(enqueue(c.kind === 'story' ? 'story_render' : 'render', { clipId: c.id, ...(req.body || {}) }));
+  res.json(enqueue(c.kind === 'story' ? 'story_render' : c.kind === 'chat' ? 'chat_render' : 'render', { clipId: c.id, ...(req.body || {}) }));
 }));
 app.post('/api/clips/:id/approve', wrap(async (req, res) => {
   const c = updateClip(req.params.id, { status: 'approved', approvedAt: now() });
@@ -150,7 +156,7 @@ app.delete('/api/clips/:id', (req, res) => {
   const i = db.clips.findIndex((c) => c.id === req.params.id);
   if (i >= 0) {
     const [c] = db.clips.splice(i, 1);
-    fs.rmSync(path.join(c.kind === 'story' ? DIRS.stories : DIRS.clips, c.id), { recursive: true, force: true });
+    fs.rmSync(path.join(c.kind === 'gameplay' ? DIRS.clips : DIRS.stories, c.id), { recursive: true, force: true });
     save();
     emit('clip_deleted', { id: c.id });
   }

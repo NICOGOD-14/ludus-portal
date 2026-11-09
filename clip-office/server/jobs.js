@@ -12,6 +12,7 @@ import { renderClip } from './pipeline/render.js';
 import { researchTopics } from './pipeline/research.js';
 import { writeScript, narrationText, fetchSceneImage, renderStory } from './pipeline/story.js';
 import { synthesize } from './pipeline/tts.js';
+import { writeChatScript, renderChat } from './pipeline/chatstory.js';
 import { refreshAnalytics } from './integrations/analytics.js';
 import { uploadToYoutube } from './integrations/youtube.js';
 
@@ -21,7 +22,7 @@ const LIMIT = { heavy: 1, light: 2 };
 
 export const JOB_LABELS = {
   clips: 'Clips desde video', render: 'Render de clip', research: 'Investigación', story: 'Video de dato curioso',
-  story_render: 'Render de dato curioso', scout: 'Búsqueda de videos', analytics: 'Estadísticas', publish: 'Publicación',
+  story_render: 'Render de dato curioso', chat: 'Historia en chat', chat_render: 'Render de historia en chat', scout: 'Búsqueda de videos', analytics: 'Estadísticas', publish: 'Publicación',
 };
 
 export function enqueue(type, payload = {}, { by = 'tú' } = {}) {
@@ -190,6 +191,31 @@ const HANDLERS = {
     return { clipId: id };
   },
 
+  async chat(job) {
+    const { premise = '', tone = 'divertido', theme = 'oscuro', voices = false, autoRender = true } = job.payload;
+    step(job, 'mateo', `Escribiendo la historia en chat${premise ? `: "${premise.slice(0, 50)}"` : ''}`, 5);
+    const chat = await writeChatScript(premise, { tone });
+    const clip = {
+      id: uid('chat_'), kind: 'chat', sourceTitle: premise || 'Historia original', title: chat.title, hook: chat.header,
+      description: chat.description, hashtags: chat.hashtags, chat, theme, voices, music: 'chill', musicVolume: 0.18,
+      status: 'draft', score: 80, version: 0, createdAt: now(), updatedAt: now(),
+      compliance: { risk: 'bajo', notes: ['✅ Historia, personajes y música originales: el formato más seguro para monetizar.', '💡 Si usas nombres de personas o marcas reales, cámbialos antes de publicar.'] },
+    };
+    db.clips.push(clip);
+    save();
+    emit('clip', clip);
+    log('mateo', `Escribí "${chat.title}" (${chat.messages.length} mensajes). Sofía lo anima.`);
+    if (autoRender) await doRenderChat(job, clip);
+    return { clipId: clip.id };
+  },
+
+  async chat_render(job) {
+    const clip = findClip(job.payload.clipId);
+    if (!clip) throw new Error('Historia no encontrada');
+    await doRenderChat(job, clip);
+    return { clipId: clip.id };
+  },
+
   async story_render(job) {
     const clip = findClip(job.payload.clipId);
     if (!clip) throw new Error('Video no encontrado');
@@ -227,6 +253,15 @@ const HANDLERS = {
     return r;
   },
 };
+
+async function doRenderChat(job, clip) {
+  updateClip(clip.id, { status: 'rendering' });
+  if (clip.voices) step(job, 'nico', 'Poniendo una voz distinta a cada personaje', 15);
+  step(job, 'sofia', 'Animando el chat mensaje por mensaje', clip.voices ? 30 : 15);
+  const r = await renderChat(clip, { onProgress: (p) => { job.progress = Math.round(15 + p * 0.83); setAgent('sofia', { progress: p }); emit('job', job); } });
+  updateClip(clip.id, { status: 'ready', output: r.output, video: fileUrl(r.output) + `?v=${Date.now()}`, thumb: fileUrl(r.thumb) + `?v=${Date.now()}`, duration: r.duration, version: (clip.version || 0) + 1, renderedAt: now() });
+  step(job, 'tomas', 'Revisión: contenido 100% original ✅', 99);
+}
 
 async function produceStory(job, clip, { images, voice, render }) {
   const dir = path.join(DIRS.stories, clip.id);

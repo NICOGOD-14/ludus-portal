@@ -26,6 +26,15 @@ function initStories() {
       toast('🔎 Lucía está investigando…');
     } catch (err) { toast(err.message, true); }
   });
+  $('#chat-new').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    try {
+      await api('/api/jobs', { body: { type: 'chat', payload: { premise: f.get('premise'), tone: f.get('tone'), theme: f.get('theme'), voices: f.get('voices') === 'on' } } });
+      e.target.premise.value = '';
+      toast('💬 Mateo está escribiendo la historia; aparecerá en el Estudio.');
+    } catch (err) { toast(err.message, true); }
+  });
   $('#topic-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -64,7 +73,7 @@ function initAuto() {
   $('#auto-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
-    const params = f.type === 'scout' ? { query: f.query || 'GTA 6 gameplay', max: 2, clipsPerVideo: 3 } : f.type === 'research' ? { query: f.query, count: 5, autoStory: 1 } : {};
+    const params = f.type === 'scout' ? { query: f.query || 'GTA 6 gameplay', max: 2, clipsPerVideo: 3 } : f.type === 'research' ? { query: f.query, count: 5, autoStory: 1 } : f.type === 'chat' ? { query: f.query, theme: 'oscuro' } : {};
     try {
       const a = await api('/api/automations', { body: { type: f.type, name: f.name || undefined, intervalMin: Number(f.intervalMin), params } });
       store.state.automations.push(a);
@@ -88,8 +97,9 @@ function renderAutos() {
       <div>
         <div><b>${esc(a.name)}</b> <span class="tiny">· ${ag ? `${ag.emoji} ${esc(ag.name.split(' ')[0])}` : ''} · cada ${a.intervalMin} min · ${a.runs || 0} ejecuciones${a.lastRun ? ` · última hace ${ago(a.lastRun)}` : ''}</span></div>
         <div class="row wrap" style="margin-top:8px">
-          ${a.type !== 'analytics' ? `<input data-q="${a.id}" value="${esc(p.query || '')}" placeholder="${a.type === 'scout' ? 'Búsqueda' : 'Tema (vacío = variado)'}" style="width:220px">` : ''}
+          ${a.type !== 'analytics' ? `<input data-q="${a.id}" value="${esc(p.query || '')}" placeholder="${a.type === 'scout' ? 'Búsqueda' : a.type === 'chat' ? 'Idea (vacío = sorpresa)' : 'Tema (vacío = variado)'}" style="width:220px">` : ''}
           ${a.type === 'scout' ? `<label>Videos <input type="number" data-max="${a.id}" value="${p.max || 2}" min="1" max="5"></label><label>Clips c/u <input type="number" data-cpv="${a.id}" value="${p.clipsPerVideo || 3}" min="1" max="8"></label><label><input type="checkbox" data-cc="${a.id}" ${p.creativeCommons ? 'checked' : ''}> Solo Creative Commons</label>` : ''}
+          ${a.type === 'chat' ? `<select data-theme="${a.id}">${Object.entries(store.state.options.chatThemes || {}).map(([k, v]) => `<option value="${k}" ${p.theme === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select><label><input type="checkbox" data-voices="${a.id}" ${p.voices ? 'checked' : ''}> Voces</label>` : ''}
           ${a.type === 'research' ? `<label>Temas <input type="number" data-count="${a.id}" value="${p.count || 5}" min="1" max="10"></label><label>Videos auto <input type="number" data-auto="${a.id}" value="${p.autoStory ?? 1}" min="0" max="5"></label>` : ''}
           <label>Cada <input type="number" data-int="${a.id}" value="${a.intervalMin}" min="15"> min</label>
           <button class="btn small" data-savea="${a.id}">Guardar</button>
@@ -110,6 +120,8 @@ function renderAutos() {
     if (v('data-cpv')) params.clipsPerVideo = Number(v('data-cpv').value);
     if (v('data-cc')) params.creativeCommons = v('data-cc').checked;
     if (v('data-count')) params.count = Number(v('data-count').value);
+    if (v('data-theme')) params.theme = v('data-theme').value;
+    if (v('data-voices')) params.voices = v('data-voices').checked;
     if (v('data-auto')) params.autoStory = Number(v('data-auto').value);
     patch(id, { params, intervalMin: Number(v('data-int').value) }).then(() => toast('Guardado ✓')).catch((e) => toast(e.message, true));
   }));

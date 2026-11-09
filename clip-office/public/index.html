@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230A0A0A'/><path d='M22 16l26 16-26 16z' fill='%23C6FF00'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>@font-face { font-family: 'Anton'; src: url('/fonts/Anton-Regular.ttf'); }</style>
+<style>@font-face { font-family: 'Anton'; src: url('/fonts/Anton-Regular.ttf'); } @font-face { font-family: 'Montserrat'; font-weight: 400; src: url('/fonts/Montserrat-Regular.ttf'); } @font-face { font-family: 'Montserrat'; font-weight: 700; src: url('/fonts/Montserrat-Bold.ttf'); }</style>
 <link rel="stylesheet" href="/css/app.css">
 <script type="importmap">{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }</script>
 </head>
@@ -18,7 +18,7 @@
   <nav id="tabs">
     <button data-tab="office" class="active">🏢 Oficina</button>
     <button data-tab="studio">🎬 Estudio</button>
-    <button data-tab="stories">🔎 Datos Curiosos</button>
+    <button data-tab="stories">🔎 Datos y Chats</button>
     <button data-tab="auto">⏰ Automatización</button>
     <button data-tab="analytics">📈 Analytics</button>
     <button data-tab="settings">⚙️ Ajustes</button>
@@ -82,7 +82,7 @@
           <div id="upload-progress" class="tiny"></div>
         </div>
         <div class="filters row">
-          <select id="clip-filter"><option value="">Todos</option><option value="gameplay">Clips</option><option value="story">Datos curiosos</option><option value="ready">Listos</option><option value="approved">Aprobados</option><option value="published">Publicados</option></select>
+          <select id="clip-filter"><option value="">Todos</option><option value="gameplay">Clips</option><option value="story">Datos curiosos</option><option value="chat">Historias en chat</option><option value="ready">Listos</option><option value="approved">Aprobados</option><option value="published">Publicados</option></select>
           <span class="tiny" id="clip-count"></span>
         </div>
         <div id="clip-list" class="clip-list"></div>
@@ -94,6 +94,17 @@
   <!-- DATOS CURIOSOS -->
   <section id="tab-stories" class="tab">
     <div class="page">
+      <div class="card">
+        <h3>💬 Historias en chat (Mateo escribe, Sofía anima)</h3>
+        <p class="tiny" style="margin-bottom:10px">Conversaciones originales que aparecen mensaje a mensaje con remate final. Humor de oficina, amigos, familia, gamers… 100% original = monetizable.</p>
+        <form id="chat-new" class="row wrap">
+          <input name="premise" class="grow" placeholder="Idea (ej. «el jefe descubre que el practicante usa IA», «mi amigo dice que GTA 6 sale mañana») — vacío = sorpresa">
+          <select name="tone"><option value="divertido">😂 Divertido</option><option value="misterio">🕵️ Misterio</option><option value="drama">🎭 Drama</option><option value="informativo">💡 Con dato curioso</option></select>
+          <select name="theme"><option value="oscuro">Oscuro (oficina)</option><option value="whatsapp">WhatsApp</option><option value="imessage">iMessage</option><option value="ludus">Ludus neón</option></select>
+          <label><input type="checkbox" name="voices"> Voces por personaje</label>
+          <button class="btn primary">✍️ Crear historia</button>
+        </form>
+      </div>
       <div class="card">
         <h3>🔎 Lucía investiga temas</h3>
         <form id="research-form" class="row">
@@ -121,7 +132,7 @@
         <h3>⏰ El equipo trabaja 24/7</h3>
         <p class="muted">Mientras este programa esté abierto, cada regla activa se ejecuta sola. Para que funcione de verdad 24/7, déjalo corriendo en una PC encendida o en un servidor (ver README).</p>
         <form id="auto-form" class="row wrap">
-          <select name="type"><option value="scout">📡 Cazar videos y hacer clips</option><option value="research">🔎 Investigar y producir datos curiosos</option><option value="analytics">📈 Actualizar métricas</option></select>
+          <select name="type"><option value="scout">📡 Cazar videos y hacer clips</option><option value="research">🔎 Investigar y producir datos curiosos</option><option value="chat">💬 Escribir y animar historias en chat</option><option value="analytics">📈 Actualizar métricas</option></select>
           <input name="name" placeholder="Nombre">
           <input name="query" placeholder="Búsqueda (ej. GTA 6 gameplay)">
           <label>Cada <input name="intervalMin" type="number" value="180" min="15"> min</label>

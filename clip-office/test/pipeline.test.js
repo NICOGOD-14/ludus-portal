@@ -112,3 +112,25 @@ test('copy por plantilla y revisión de copyright', () => {
   const own = complianceCheck({ start: 0, end: 30, music: 'hype' }, { license: 'own' });
   assert.equal(own.risk, 'bajo');
 });
+
+const { wrap, layoutMessages, timeline, buildChatAss, templateChat, normalizeChat } = await import('../server/pipeline/chatstory.js');
+
+test('historias en chat: wrap, maquetado y línea de tiempo', () => {
+  assert.ok(wrap('esto es un mensaje bastante largo que debe partirse en varias líneas', 24).every((l) => l.length <= 24));
+  const chat = templateChat('excel');
+  assert.ok(chat.messages.length >= 8);
+  const L = layoutMessages(chat);
+  assert.equal(L.length, chat.messages.length);
+  for (let i = 1; i < L.length; i++) assert.ok(L[i].y > L[i - 1].y + L[i - 1].h - 1);
+  const { times, total } = timeline(chat);
+  assert.ok(times.every((t, i) => i === 0 || t.start > times[i - 1].start));
+  assert.ok(total > times.at(-1).start);
+  const ass = buildChatAss(chat, { times, total, handle: '@yo' });
+  assert.match(ass, /Style: Msg,Montserrat/);
+  assert.match(ass, /\\move\(/); // hay scroll en historias largas
+});
+
+test('normalizeChat descarta mensajes de personajes inexistentes', () => {
+  const c = normalizeChat({ characters: [{ name: 'Ana' }], messages: [{ from: 'Ana', text: 'hola' }, { from: 'Nadie', text: 'x' }, ['Ana', 'chau']] });
+  assert.deepEqual(c.messages.map((m) => m.text), ['hola', 'chau']);
+});

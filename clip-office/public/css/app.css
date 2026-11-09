@@ -239,3 +239,18 @@ td.num, th.num { text-align: right; font-family: var(--mono); }
 .ed-form .field input:not([type=range]):not([type=checkbox]), .ed-form .field select, .ed-form .field textarea { width: 100%; }
 #new-clips input[type=number] { width: 58px; }
 #new-clips .btn { padding: 9px 10px; }
+
+/* vista previa de historias en chat */
+.chatphone { display: flex; flex-direction: column; container-type: inline-size; }
+.chatphone .chd { font-family: 'Montserrat', 'Space Grotesk', sans-serif; font-weight: 700; text-align: center; font-size: 6.6cqw; padding: 15% 8% 6%; line-height: 1.15; }
+.chatphone .cpanel { flex: 1; margin-bottom: 9%; overflow: hidden; }
+.chatphone .cscroll { height: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 1.2cqw; padding: 3cqw 5cqw; justify-content: flex-start; }
+.chatphone .cm { display: flex; gap: 2cqw; align-items: flex-start; animation: tin .2s; }
+.chatphone .cm.first { margin-top: 2.2cqw; }
+.chatphone .cm.me { justify-content: flex-end; }
+.chatphone .av { width: 7cqw; height: 7cqw; border-radius: 50%; flex: none; display: grid; place-items: center; font: 700 3.4cqw 'Montserrat', sans-serif; color: #fff; }
+.chatphone .bb { max-width: 74%; padding: 2cqw 2.8cqw; border-radius: 2.4cqw; font: 400 4.4cqw/1.25 'Montserrat', 'Space Grotesk', sans-serif; word-wrap: break-word; }
+.chatphone .nm { font-size: 3cqw; margin-bottom: .6cqw; }
+.chatphone .typing { display: flex; gap: 1.2cqw; padding: 2.6cqw 3cqw; }
+.chatphone .typing i { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: #9a9aa2; animation: pulse 1s infinite; }
+.chatphone .typing i:nth-child(2) { animation-delay: .15s; } .chatphone .typing i:nth-child(3) { animation-delay: .3s; }

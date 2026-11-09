@@ -59,10 +59,10 @@ function renderList() {
   $('#clip-count').textContent = `${clips.length} elementos`;
   $('#clip-list').innerHTML = clips.map((c) => `
     <div class="clip-item ${c.id === sel ? 'sel' : ''}" data-id="${c.id}">
-      <div class="th" style="${c.thumb ? `background-image:url('${c.thumb}')` : ''}">${c.thumb ? '' : c.kind === 'story' ? '🔎' : '🎮'}</div>
+      <div class="th" style="${c.thumb ? `background-image:url('${c.thumb}')` : ''}">${c.thumb ? '' : c.kind === 'story' ? '🔎' : c.kind === 'chat' ? '💬' : '🎮'}</div>
       <div style="min-width:0">
         <div class="t">${esc(c.title || c.hook)}</div>
-        <div class="tiny" style="margin-top:3px">${c.kind === 'story' ? '🔎 Dato curioso' : `🎮 ${esc((c.sourceTitle || '').slice(0, 34))}`}</div>
+        <div class="tiny" style="margin-top:3px">${c.kind === 'story' ? '🔎 Dato curioso' : c.kind === 'chat' ? '💬 Historia en chat' : `🎮 ${esc((c.sourceTitle || '').slice(0, 34))}`}</div>
         <div class="meta">${badge(c.status)}<span class="badge">⭐ ${c.score ?? '—'}</span>${c.compliance ? `<span class="badge risk-${c.compliance.risk}">© ${c.compliance.risk}</span>` : ''}<span class="badge">${Math.round(c.duration || (c.end - c.start) || 0)} s</span></div>
       </div>
     </div>`).join('') || '<div class="tiny">Aún no hay clips. Pega un link arriba o pídeselo a Valeria en la Oficina.</div>';
@@ -76,7 +76,7 @@ export function openClip(id) {
   draft = structuredClone(c);
   renderList();
   cancelAnimationFrame(raf);
-  if (c.kind === 'story') renderStoryEditor(); else renderClipEditor();
+  if (c.kind === 'story') renderStoryEditor(); else if (c.kind === 'chat') renderChatEditor(); else renderClipEditor();
 }
 
 function refreshEditorFromServer(c) {
@@ -410,4 +410,146 @@ async function toggleRecording() {
     btn.classList.add('primary');
     $('#rec-state').innerHTML = `Lee en voz alta: <i>${esc([$('#s-hook').value, ...$$('#scenes textarea').map((t) => t.value), $('#s-cta').value].join(' '))}</i>`;
   } catch (e) { toast(`No pude usar el micrófono: ${e.message}`, true); }
+}
+
+
+// ================= HISTORIA EN CHAT =================
+let chatTimer = null;
+
+function renderChatEditor() {
+  const c = draft;
+  const o = store.state.options;
+  $('#editor').innerHTML = `
+  <div class="editor">
+    <div class="phone-wrap">
+      <div class="prev-tabs"><button class="btn small active" data-pv="live">👁️ Vista previa en vivo</button><button class="btn small" data-pv="final">🎞️ Render final</button></div>
+      <div id="pv-live">
+        <div class="phone chatphone" id="chatphone"></div>
+        <div class="row" style="margin-top:8px"><button class="btn small" id="chat-play">▶ Reproducir</button><span class="tiny">Así se verá: los mensajes aparecen uno a uno.</span></div>
+      </div>
+      <div id="pv-final" class="hidden">
+        ${c.video ? `<div class="phone"><video id="final-video" data-src="${c.video}" src="${c.video}" controls playsinline style="width:100%;height:100%"></video></div>` : `<div class="phone"><div class="empty">${c.status === 'rendering' ? '🎞️ Animando…' : 'Aún sin renderizar'}</div></div>`}
+      </div>
+    </div>
+    <div class="ed-form">
+      <div class="row" style="justify-content:space-between"><div id="ed-status">${statusLine()}</div></div>
+      <div id="ed-job"></div>
+      <label class="field"><span>Título (YouTube / TikTok)</span><input id="c-title" value="${esc(c.title)}"></label>
+      <label class="field"><span>Frase de arriba (el gancho)</span><input id="c-header" value="${esc(c.chat.header)}"></label>
+      <div class="ed-grid">
+        <label class="field"><span>Estilo del chat</span><select id="c-theme">${opt(o.chatThemes || {}, c.theme)}</select></label>
+        <label class="field"><span>Música</span><select id="c-music">${musicOpts(c.music)}</select></label>
+        <label class="field"><span>Volumen música</span><input type="range" id="c-mvol" min="0" max="0.6" step="0.01" value="${c.musicVolume ?? 0.18}"></label>
+        <label class="field" style="justify-content:flex-end"><span>&nbsp;</span><label><input type="checkbox" id="c-voices" ${c.voices ? 'checked' : ''}> 🎙️ Voz distinta por personaje</label></label>
+      </div>
+      <div class="field"><span>Personajes (marca «yo» para quien escribe desde la derecha)</span><div class="stack" id="c-chars"></div><button class="btn small" id="c-addchar" style="align-self:flex-start">+ Personaje</button></div>
+      <div class="field"><span>Mensajes (el último es el remate 🥁)</span><div class="stack" id="c-msgs"></div><button class="btn small" id="c-addmsg" style="align-self:flex-start">+ Mensaje</button></div>
+      <label class="field"><span>Descripción</span><textarea id="f-desc" rows="4">${esc(c.description || '')}</textarea></label>
+      <label class="field"><span>Hashtags</span><input id="f-tags" value="${esc((c.hashtags || []).join(' '))}"></label>
+      ${complianceBox(c)}
+      ${commonActions()}
+    </div>
+  </div>`;
+  renderChatLists();
+  $('#c-addchar').addEventListener('click', () => { syncChat(); draft.chat.characters.push({ name: `Persona ${draft.chat.characters.length + 1}`, role: '', me: false }); renderChatLists(); });
+  $('#c-addmsg').addEventListener('click', () => { syncChat(); draft.chat.messages.push({ from: draft.chat.characters[0]?.name || '', text: '' }); renderChatLists(); });
+  $('#chat-play').addEventListener('click', playChat);
+  ['#c-header', '#c-theme'].forEach((x) => $(x).addEventListener('input', () => { syncChat(); drawChatPhone(draft.chat.messages.length); }));
+  $$('[data-pv]').forEach((b) => b.addEventListener('click', () => {
+    $$('[data-pv]').forEach((x) => x.classList.toggle('active', x === b));
+    $('#pv-live').classList.toggle('hidden', b.dataset.pv !== 'live');
+    $('#pv-final').classList.toggle('hidden', b.dataset.pv !== 'final');
+  }));
+  bindActions(collectChat);
+  drawChatPhone(draft.chat.messages.length);
+  updateJobBar();
+}
+
+function renderChatLists() {
+  const ch = draft.chat;
+  $('#c-chars').innerHTML = ch.characters.map((p, i) => `
+    <div class="row"><input data-cn="${i}" value="${esc(p.name)}" placeholder="Nombre" style="width:150px"><input data-cr="${i}" value="${esc(p.role)}" placeholder="Rol (opcional)" class="grow"><label><input type="checkbox" data-cm="${i}" ${p.me ? 'checked' : ''}> yo</label><button class="btn small danger" data-cdel="${i}">✕</button></div>`).join('');
+  const names = ch.characters.map((p) => p.name);
+  $('#c-msgs').innerHTML = ch.messages.map((m, i) => `
+    <div class="row"><select data-mf="${i}" style="width:140px">${names.map((n) => `<option ${n === m.from ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select><input data-mt="${i}" value="${esc(m.text)}" class="grow" maxlength="220"><button class="btn small" data-mup="${i}" title="Subir">↑</button><button class="btn small danger" data-mdel="${i}">✕</button></div>`).join('');
+  $$('[data-cdel]').forEach((b) => b.addEventListener('click', () => { syncChat(); const n = ch.characters[b.dataset.cdel].name; ch.characters.splice(b.dataset.cdel, 1); ch.messages = ch.messages.filter((m) => m.from !== n); renderChatLists(); }));
+  $$('[data-mdel]').forEach((b) => b.addEventListener('click', () => { syncChat(); ch.messages.splice(b.dataset.mdel, 1); renderChatLists(); }));
+  $$('[data-mup]').forEach((b) => b.addEventListener('click', () => { syncChat(); const i = +b.dataset.mup; if (i > 0) [ch.messages[i - 1], ch.messages[i]] = [ch.messages[i], ch.messages[i - 1]]; renderChatLists(); }));
+  $$('#c-chars input, #c-msgs input, #c-msgs select').forEach((x) => x.addEventListener('change', () => { syncChat(); renderChatLists(); }));
+  drawChatPhone(ch.messages.length);
+}
+
+function syncChat() {
+  const ch = draft.chat;
+  const renames = {};
+  ch.characters.forEach((p, i) => {
+    const n = $(`[data-cn="${i}"]`)?.value.trim();
+    if (n && n !== p.name) { renames[p.name] = n; p.name = n; }
+    p.role = $(`[data-cr="${i}"]`)?.value ?? p.role;
+    p.me = $(`[data-cm="${i}"]`)?.checked ?? p.me;
+  });
+  ch.messages.forEach((m, i) => {
+    m.from = renames[m.from] || $(`[data-mf="${i}"]`)?.value || m.from;
+    if (renames[m.from]) m.from = renames[m.from];
+    m.text = $(`[data-mt="${i}"]`)?.value ?? m.text;
+  });
+  if ($('#c-header')) ch.header = $('#c-header').value;
+  if ($('#c-theme')) draft.theme = $('#c-theme').value;
+}
+
+function collectChat() {
+  syncChat();
+  return {
+    title: $('#c-title').value, theme: $('#c-theme').value, voices: $('#c-voices').checked, music: $('#c-music').value, musicVolume: Number($('#c-mvol').value),
+    description: $('#f-desc').value, hashtags: $('#f-tags').value.split(/\s+/).filter(Boolean),
+    chat: { ...draft.chat, messages: draft.chat.messages.filter((m) => m.text.trim()) },
+  };
+}
+
+const CHAT_CSS = {
+  oscuro: { bg: '#101114', panel: '#1d1e22', other: '#2b2c31', me: '#2b2c31', text: '#fff', meta: '#9a9aa2', header: '#fff' },
+  whatsapp: { bg: '#0b141a', panel: '#0b141a', other: '#202c33', me: '#005c4b', text: '#e9edef', meta: '#8696a0', header: '#fff' },
+  imessage: { bg: '#000', panel: '#000', other: '#26252a', me: '#0a84ff', text: '#fff', meta: '#8e8e93', header: '#fff' },
+  ludus: { bg: '#0a0a0a', panel: '#121212', other: '#1f1f1f', me: '#C6FF00', meText: '#000', text: '#fff', meta: '#9a9a9a', header: '#C6FF00' },
+};
+const AV = ['#ff6b3d', '#4dd6ff', '#9b5cff', '#ffb000', '#00e5a8', '#ff3b8d'];
+
+function drawChatPhone(n, typingFrom = null) {
+  const el = $('#chatphone');
+  if (!el) return;
+  const ch = draft.chat;
+  const T = CHAT_CSS[draft.theme] || CHAT_CSS.oscuro;
+  const chars = Object.fromEntries(ch.characters.map((p, i) => [p.name, { ...p, color: AV[i % AV.length] }]));
+  const msgs = ch.messages.slice(0, n).map((m, i) => {
+    const c = chars[m.from] || { name: m.from, color: '#888' };
+    const first = ch.messages[i - 1]?.from !== m.from;
+    return `<div class="cm ${c.me ? 'me' : ''} ${first ? 'first' : ''}">
+      ${!c.me ? `<div class="av" style="background:${first ? c.color : 'transparent'}">${first ? esc(c.name[0] || '') : ''}</div>` : ''}
+      <div class="bb" style="background:${c.me ? T.me : T.other};color:${c.me && T.meText ? T.meText : T.text}">${first && !c.me ? `<div class="nm" style="color:${T.meta}">${esc(c.name)}${c.role ? ` - ${esc(c.role)}` : ''}</div>` : ''}${esc(m.text)}</div></div>`;
+  }).join('');
+  const typing = typingFrom ? `<div class="cm ${chars[typingFrom]?.me ? 'me' : ''}">${chars[typingFrom]?.me ? '' : '<div class="av" style="background:transparent"></div>'}<div class="bb typing" style="background:${T.other}"><i></i><i></i><i></i></div></div>` : '';
+  el.style.background = T.bg;
+  el.innerHTML = `<div class="chd" style="color:${T.header}">${esc(ch.header)}</div><div class="cpanel" style="background:${T.panel}"><div class="cscroll">${msgs}${typing}</div></div><div class="ov-handle">${esc(store.state.settings.watermark ? store.state.settings.handle : '')}</div>`;
+  const sc = $('.cscroll', el);
+  sc.scrollTop = sc.scrollHeight;
+}
+
+function playChat() {
+  syncChat();
+  clearTimeout(chatTimer);
+  const msgs = draft.chat.messages;
+  let i = 0;
+  drawChatPhone(0);
+  const next = () => {
+    if (i >= msgs.length) return;
+    const same = msgs[i - 1]?.from === msgs[i].from;
+    drawChatPhone(i, msgs[i].from);
+    chatTimer = setTimeout(() => {
+      i++;
+      drawChatPhone(i);
+      const read = Math.min(4.2, Math.max(1.1, 0.85 + msgs[i - 1].text.length * 0.045));
+      chatTimer = setTimeout(next, read * 1000);
+    }, (same ? 0.35 : 0.75) * 1000);
+  };
+  chatTimer = setTimeout(next, 1400);
 }

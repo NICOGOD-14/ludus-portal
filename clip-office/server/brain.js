@@ -32,6 +32,11 @@ const TOOLS = {
       return { jobId: enqueue('research', { query: topic || '', count: 3, autoStory: 1 }, { by: 'chat' }).id, nota: 'Primero Lucía investiga el tema y luego se produce el video del mejor dato.' };
     },
   },
+  create_chat_story: {
+    description: 'Crea una "historia en chat" ORIGINAL: una conversación de grupo animada mensaje a mensaje (estilo WhatsApp/Slack) con remate final. Ideal para humor de oficina, amigos, familia, gamers o datos curiosos contados como chat. Es el formato más seguro para monetizar.',
+    input_schema: { type: 'object', additionalProperties: false, properties: { premise: { type: 'string', description: 'Situación o idea de la historia' }, tone: { type: 'string', enum: ['divertido', 'misterio', 'drama', 'informativo'] }, theme: { type: 'string', enum: ['oscuro', 'whatsapp', 'imessage', 'ludus'] }, voices: { type: 'boolean', description: 'Voz distinta para cada personaje' } } },
+    run: ({ premise = '', tone, theme, voices }) => ({ jobId: enqueue('chat', { premise, tone, theme, voices: Boolean(voices) }, { by: 'chat' }).id }),
+  },
   list_clips: {
     description: 'Lista los clips y videos recientes con su estado.',
     input_schema: { type: 'object', additionalProperties: false, properties: { status: { type: 'string' }, limit: { type: 'integer' } } },
@@ -58,8 +63,8 @@ const TOOLS = {
     run: () => { enqueue('analytics', {}, { by: 'chat' }); const s = analyticsSummary(); return { produccion: s.production, plataformas: Object.fromEntries(Object.entries(s.platforms).map(([k, v]) => [k, { ultimo: v.last, delta24h: v.delta24h }])) }; },
   },
   set_automation: {
-    description: 'Activa/desactiva o crea una automatización 24/7 (scout = cazar videos, research = datos curiosos, analytics = métricas).',
-    input_schema: { type: 'object', additionalProperties: false, required: ['type'], properties: { type: { type: 'string', enum: ['scout', 'research', 'analytics'] }, enabled: { type: 'boolean' }, query: { type: 'string' }, intervalMin: { type: 'integer' }, runNow: { type: 'boolean' } } },
+    description: 'Activa/desactiva o crea una automatización 24/7 (scout = cazar videos, research = datos curiosos, chat = historias en chat, analytics = métricas).',
+    input_schema: { type: 'object', additionalProperties: false, required: ['type'], properties: { type: { type: 'string', enum: ['scout', 'research', 'chat', 'analytics'] }, enabled: { type: 'boolean' }, query: { type: 'string' }, intervalMin: { type: 'integer' }, runNow: { type: 'boolean' } } },
     run: ({ type, enabled = true, query, intervalMin, runNow }) => {
       let a = db.automations.find((x) => x.type === type && (!query || x.params?.query === query)) || db.automations.find((x) => x.type === type);
       if (!a) { a = { id: `auto_${Date.now()}`, name: `${type}: ${query || 'general'}`, type, intervalMin: intervalMin || 180, enabled, params: { query: query || '' }, runs: 0, createdAt: now() }; db.automations.push(a); }
@@ -118,6 +123,12 @@ function basicReply(agent, text) {
   if (url) {
     TOOLS.create_clips_from_url.run({ url, count: n, seconds: secs });
     return `¡Va! 🎬 Diego ya está descargando el video, Bruno lo transcribe y Sofía corta los ${n || db.settings.clipCount} mejores momentos${secs ? ` de ~${secs} s` : ''}. Te aviso en el Estudio cuando estén listos.`;
+  }
+  if (/(historia|chat|conversaci)/.test(t) && !/(investiga)/.test(t)) {
+    const premise = text.replace(/.*?(sobre|de|acerca de)\s+/i, '').replace(/[?.!¿¡]/g, '').trim();
+    const theme = /whatsapp/.test(t) ? 'whatsapp' : /imessage|iphone/.test(t) ? 'imessage' : 'oscuro';
+    TOOLS.create_chat_story.run({ premise: /(sobre|acerca de)/i.test(text) ? premise : '', theme, voices: /(voz|voces)/.test(t) });
+    return `💬 ¡Me encanta! Mateo está escribiendo la historia en chat y Sofía la anima mensaje por mensaje${/(voz|voces)/.test(t) ? ', con una voz distinta para cada personaje' : ''}. La verás en el Estudio.`;
   }
   if (/(investiga|dato|curios|tema)/.test(t)) {
     const q = text.replace(/.*?(sobre|acerca de)\s+/i, '').replace(/\s+y\s+(haz|hazme|crea|produce|genera|arma|luego).*$/i, '').replace(/[?.!¿¡]/g, '').trim();

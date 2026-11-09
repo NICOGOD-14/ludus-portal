@@ -78,6 +78,8 @@ Qué pasa: Diego descarga → Bruno transcribe → Sofía detecta los momentos c
 
 **Datos curiosos (🔎):** pide un tema ("misterios del Perú", "el espacio") o déjalo vacío. Lucía investiga, y con *Crear video* Mateo escribe un guion con hook, Camila genera una ilustración por escena, Nico narra y Sofía monta todo con efecto Ken Burns y transiciones. Puedes cambiar cada imagen (render IA, foto real o URL), editar el texto, cambiar la voz o **grabar tu voz** desde el navegador.
 
+**Historias en chat (💬, en la pestaña Datos y Chats):** escribe una idea ("el jefe descubre que el practicante usa IA") o déjala vacía. Mateo escribe una conversación original con remate final y Sofía la anima mensaje por mensaje: indicador "escribiendo…", scroll, sonido de notificación y música. Hay 4 estilos (oscuro tipo oficina, WhatsApp, iMessage y Ludus neón) y la opción de poner una **voz distinta a cada personaje**. En el Estudio puedes editar personajes y mensajes, reordenarlos y ver la vista previa en vivo antes de renderizar. Es contenido 100% original, el formato más seguro para monetizar. También puedes pedírsela a Valeria: "hazme una historia en chat estilo WhatsApp sobre…".
+
 **Hablarle a un agente:** clic en su escritorio (o en la lista). Pestañas: 💬 Chat (con 🎙️ para dictar por voz y opción de escuchar la respuesta), 👤 Perfil (habilidades y qué pedirle) y 🛠️ Trabajo (lo que hace ahora y su bitácora).
 
 ---
@@ -87,6 +89,7 @@ Qué pasa: Diego descarga → Bruno transcribe → Sofía detecta los momentos c
 En ⏰ Automatización hay reglas que corren solas mientras el programa está abierto:
 
 - **Datos curiosos del día** (activa): cada 12 h investiga y produce 1 video.
+- **Historia en chat diaria** (activa): cada 24 h escribe y anima una historia en chat original.
 - **Métricas cada hora** (activa).
 - **GTA 6: gameplays nuevos** (desactivada por defecto): cada 3 h busca videos nuevos y saca 3 clips de cada uno. Actívala cuando decidas tu estrategia de derechos (ver abajo). Con `YOUTUBE_API_KEY` puedes marcar "Solo Creative Commons".
 
@@ -135,7 +138,7 @@ clip-office/
 │   └── integrations/     YouTube (métricas + subida), TikTok, Instagram
 ├── public/               interfaz: oficina 3D (Three.js), estudio, paneles
 ├── scripts/              instalación y voz (edge-tts)
-├── assets/fonts/         tipografía Anton (licencia OFL)
+├── assets/fonts/         tipografías Anton y Montserrat (licencia OFL)
 ├── test/                 pruebas (npm test)
 └── data/                 tus videos, clips, base de datos y claves (no se sube a git)
 ```
