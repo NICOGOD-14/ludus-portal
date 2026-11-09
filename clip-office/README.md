@@ -86,11 +86,11 @@ Qué pasa: Diego descarga → Bruno transcribe → Sofía detecta los momentos c
 
 ## 🌐 Abrir la oficina desde el celular (link público gratis)
 
-Doble clic en **`iniciar-con-link-windows.bat`** (Mac: `iniciar-con-link-mac.command`, o `npm run online`). La primera vez descarga solo **Cloudflare Tunnel** y crea una contraseña. En la ventana verás algo así:
+Doble clic en **`iniciar-con-link-windows.bat`** (Mac: `iniciar-con-link-mac.command`, o `npm run online`). La primera vez descarga solo **Cloudflare Tunnel** y crea una contraseña. En la ventana negra aparecerá TU link real (este de abajo es solo un ejemplo, no lo copies):
 
 ```
-🌐 TU OFICINA EN INTERNET:  https://palabras-al-azar.trycloudflare.com
-🔑 Contraseña:  tigre-neon-482
+🌐 TU OFICINA EN INTERNET:  https://(cuatro-palabras-distintas-cada-vez).trycloudflare.com
+🔑 Contraseña:  (la tuya, generada al azar)
 ```
 
 Abre ese link desde el celular o cualquier PC, pon la contraseña y listo. En la app también aparece el botón **🌐 Link público** arriba para copiarlo.
