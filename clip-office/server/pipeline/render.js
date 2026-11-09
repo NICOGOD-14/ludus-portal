@@ -39,12 +39,14 @@ export async function renderClip(clip, src, { onProgress } = {}) {
   const dur = clamp(clip.end - start, 1, Math.max(1, src.duration - start));
   const assFile = path.join(dir, 'captions.ass');
   fs.writeFileSync(assFile, buildAss({
-    words: clip.words || [], hook: clip.hook, commentary: clip.showCommentary === false ? '' : clip.commentary,
+    words: clip.words || [], hook: clip.hook, hookDuration: src.height > src.width ? 2.5 : null, commentary: clip.showCommentary === false ? '' : clip.commentary,
     handle: s.watermark ? s.handle : '', duration: dur, style: clip.captionStyle || s.captionStyle, captionY: clip.captionY ?? 0.72,
   }));
 
   const layout = clip.layout || s.layout;
-  const zoom = clamp(Number(clip.zoom) || (layout === 'zoom' ? 1.9 : 1.22), 0.6, 3);
+  // videos que ya son verticales: se ajustan al ancho para no cortar texto de los costados
+  const vertical = src.height > src.width;
+  const zoom = clamp(Number(clip.zoom) || (layout === 'zoom' ? 1.9 : vertical ? 1.0 : 1.22), 0.6, 3);
   const cropX = clamp(clip.cropX ?? 0.5, 0, 1);
   let v;
   if (layout === 'crop') {

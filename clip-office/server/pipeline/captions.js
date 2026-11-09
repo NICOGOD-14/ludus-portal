@@ -32,7 +32,7 @@ export function chunkWords(words, maxWords = 3, maxChars = 18) {
   return chunks;
 }
 
-export function buildAss({ words = [], hook = '', commentary = '', handle = '', duration, style = 'karaoke', accent = '#C6FF00', captionY = 0.7 }) {
+export function buildAss({ hookDuration = null, words = [], hook = '', commentary = '', handle = '', duration, style = 'karaoke', accent = '#C6FF00', captionY = 0.7 }) {
   const hex = accent.replace('#', '');
   const acc = `&H00${hex.slice(4, 6)}${hex.slice(2, 4)}${hex.slice(0, 2)}`.toUpperCase();
   const capMargin = Math.round(1920 * (1 - captionY));
@@ -55,7 +55,7 @@ Style: Handle,Anton,40,&H50FFFFFF,&H50FFFFFF,&H96000000,&H00000000,0,0,0,0,100,1
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
   const ev = [];
-  if (hook) ev.push(`Dialogue: 5,${t(0)},${t(duration)},Hook,,0,0,0,,{\\fad(120,0)\\t(0,180,\\fscx106\\fscy106)\\t(180,320,\\fscx100\\fscy100)}${assText(hook.toUpperCase())}`);
+  if (hook) ev.push(`Dialogue: 5,${t(0)},${t(hookDuration ? Math.min(hookDuration, duration) : duration)},Hook,,0,0,0,,{\\fad(120,0)\\t(0,180,\\fscx106\\fscy106)\\t(180,320,\\fscx100\\fscy100)}${assText(hook.toUpperCase())}`);
   if (commentary && duration > 6) ev.push(`Dialogue: 4,${t(Math.min(3.5, duration * 0.15))},${t(Math.min(duration - 0.5, 10))},Comment,,0,0,0,,{\\fad(200,200)}${assText(commentary)}`);
   if (handle) ev.push(`Dialogue: 1,${t(0)},${t(duration)},Handle,,0,0,0,,${assText(handle)}`);
 
