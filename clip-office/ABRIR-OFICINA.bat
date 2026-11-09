@@ -24,6 +24,7 @@ where ffmpeg >nul 2>nul
 if errorlevel 1 (
   echo [3/3] Instalando FFmpeg...
   winget install -e --id Gyan.FFmpeg --accept-package-agreements --accept-source-agreements
+  set "PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WinGet\Links"
 )
 
 where node >nul 2>nul
