@@ -18,8 +18,9 @@ async function boot() {
   if (tab && document.getElementById(`tab-${tab}`)) go(tab);
   window.addEventListener('hashchange', () => { const t = location.hash.slice(1); if (t && document.getElementById(`tab-${t}`)) go(t); });
   renderTop();
+  $('#link-pill').addEventListener('click', async () => { try { await navigator.clipboard.writeText(store.state.capabilities.publicUrl); toast('🌐 Link copiado. Ábrelo desde tu celular.'); } catch { prompt('Tu link público:', store.state.capabilities.publicUrl); } });
   on((ev) => {
-    if (['job', 'reload', 'analytics', 'clip'].includes(ev.type)) { renderTop(); updateKpi(); }
+    if (['job', 'reload', 'analytics', 'clip', 'public_url'].includes(ev.type)) { renderTop(); updateKpi(); }
     if (ev.type === 'agent' || ev.type === 'reload') { renderTeam(); if (ev.type === 'agent') office?.updateAgent(ev.payload.id, ev.payload.state); if (current && ev.payload?.id === current) renderAgentHead(); }
     if (ev.type === 'log' || ev.type === 'reload') renderActivity();
     if (ev.type === 'log' && ev.payload.agentId === 'valeria' && /terminamos|falló/.test(ev.payload.text)) toast(ev.payload.text, /falló/.test(ev.payload.text));
@@ -33,6 +34,9 @@ function renderTop() {
   pill.textContent = s.capabilities.llm ? '🧠 Claude activo' : '⚙️ modo básico';
   pill.classList.toggle('warn', !s.capabilities.llm);
   pill.title = s.capabilities.llm ? `Modelo: ${s.capabilities.model}` : 'Agrega ANTHROPIC_API_KEY en Ajustes para que los agentes piensen con Claude';
+  const lp = $('#link-pill');
+  lp.classList.toggle('hidden', !s.capabilities.publicUrl);
+  lp.title = s.capabilities.publicUrl ? `Copiar: ${s.capabilities.publicUrl}` : '';
   const active = s.jobs.filter((j) => j.status === 'running' || j.status === 'queued').length;
   $('#jobs-pill').textContent = `${active} trabajo${active === 1 ? '' : 's'} activo${active === 1 ? '' : 's'}`;
 }

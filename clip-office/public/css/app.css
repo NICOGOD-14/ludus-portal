@@ -254,3 +254,6 @@ td.num, th.num { text-align: right; font-family: var(--mono); }
 .chatphone .typing { display: flex; gap: 1.2cqw; padding: 2.6cqw 3cqw; }
 .chatphone .typing i { width: 1.6cqw; height: 1.6cqw; border-radius: 50%; background: #9a9aa2; animation: pulse 1s infinite; }
 .chatphone .typing i:nth-child(2) { animation-delay: .15s; } .chatphone .typing i:nth-child(3) { animation-delay: .3s; }
+
+button.pill { background: rgba(198,255,0,.08); cursor: pointer; font-family: var(--mono); }
+button.pill:hover { background: rgba(198,255,0,.18); }

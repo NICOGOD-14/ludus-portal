@@ -84,6 +84,24 @@ Qué pasa: Diego descarga → Bruno transcribe → Sofía detecta los momentos c
 
 ---
 
+## 🌐 Abrir la oficina desde el celular (link público gratis)
+
+Doble clic en **`iniciar-con-link-windows.bat`** (Mac: `iniciar-con-link-mac.command`, o `npm run online`). La primera vez descarga solo **Cloudflare Tunnel** y crea una contraseña. En la ventana verás algo así:
+
+```
+🌐 TU OFICINA EN INTERNET:  https://palabras-al-azar.trycloudflare.com
+🔑 Contraseña:  tigre-neon-482
+```
+
+Abre ese link desde el celular o cualquier PC, pon la contraseña y listo. En la app también aparece el botón **🌐 Link público** arriba para copiarlo.
+
+- Funciona **mientras tu laptop y esa ventana estén encendidas**. Si la cierras, el link deja de funcionar.
+- El link **cambia cada vez** que lo vuelves a abrir (es la versión gratis y sin cuenta de Cloudflare).
+- Desde tu propia laptop (`http://localhost:4321`) no pide contraseña; desde el link, siempre. Cámbiala en ⚙️ Ajustes → `APP_PASSWORD`.
+- Si no conecta, puede ser que la red (por ejemplo la de la universidad) bloquee el túnel: prueba con los datos del celular o el wifi de tu casa.
+
+---
+
 ## ⏰ Funcionando 24/7
 
 En ⏰ Automatización hay reglas que corren solas mientras el programa está abierto:

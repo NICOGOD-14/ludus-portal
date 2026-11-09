@@ -7,6 +7,7 @@ export async function api(path, opts = {}) {
     headers: opts.raw ? opts.headers : { 'Content-Type': 'application/json', ...(opts.headers || {}) },
     body: opts.raw ? opts.body : opts.body ? JSON.stringify(opts.body) : undefined,
   });
+  if (res.status === 401) { location.href = '/login'; throw new Error('Inicia sesión'); }
   const ct = res.headers.get('content-type') || '';
   const data = ct.includes('json') ? await res.json() : await res.text();
   if (!res.ok) throw new Error(data?.error || data || `Error ${res.status}`);
@@ -55,6 +56,7 @@ export function applyEvent(ev) {
     case 'analytics': s.analytics = p; break;
     case 'settings': s.settings = p; break;
     case 'options': Object.assign(s.options, p); break;
+    case 'public_url': s.capabilities.publicUrl = p.url; break;
     default: break;
   }
   notify(ev);

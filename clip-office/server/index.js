@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { ROOT, DIRS, PORT, HOST, BIN, secretStatus, setSecrets } from './config.js';
+import { ROOT, DIRS, PORT, HOST, BIN, secretStatus, setSecrets, getSecret } from './config.js';
 import { db, bus, save, flush, now, emit, findClip, updateClip, findTopic, uid } from './db.js';
 import { allAgents, log } from './agents.js';
 import { chat } from './brain.js';
@@ -20,8 +20,12 @@ import { summary as analyticsSummary, addManual } from './integrations/analytics
 import { youtubeAuthUrl, youtubeCallback, youtubeConnected } from './integrations/youtube.js';
 import { llmAvailable, model } from './llm.js';
 import { which, download } from './util.js';
+import { authMiddleware, loginRoutes, getPublicUrl } from './auth.js';
 
 const app = express();
+app.disable('x-powered-by');
+loginRoutes(app, express);
+app.use(authMiddleware);
 app.use(express.json({ limit: '2mb' }));
 
 // ---------- archivos ----------
@@ -59,7 +63,7 @@ function statePayload() {
     agentLog: db.agentLog.slice(-80),
     analytics: analyticsSummary(),
     secrets: secretStatus(),
-    capabilities: { ...caps, llm: llmAvailable(), model: model(), youtubeUpload: youtubeConnected() },
+    capabilities: { ...caps, llm: llmAvailable(), model: model(), youtubeUpload: youtubeConnected(), publicUrl: getPublicUrl(), hasPassword: Boolean(getSecret('APP_PASSWORD')) },
     options: { music: listMusic(), moods: MUSIC_MOODS, voices: VOICES, layouts: LAYOUTS, captionStyles: CAPTION_STYLES, chatThemes: Object.fromEntries(Object.entries(CHAT_THEMES).map(([k, v]) => [k, v.label])) },
   };
 }

@@ -246,6 +246,10 @@ function renderSettings() {
       </form>
       <button class="btn primary" id="set-save" style="margin-top:12px">Guardar ajustes</button>
     </div>
+    <div class="card"><h3>🌐 Acceso desde internet</h3>
+      ${caps.publicUrl ? `<p>Tu oficina está en línea: <a href="${esc(caps.publicUrl)}" target="_blank" rel="noopener">${esc(caps.publicUrl)}</a></p><p class="tiny">Funciona mientras tu laptop y la ventana de «npm run online» sigan encendidas. El link cambia cada vez que lo vuelves a abrir.</p>` : '<p class="tiny">Para tener un link y abrir la oficina desde tu celular u otra PC, cierra el programa y ábrelo con <b>iniciar-con-link-windows.bat</b> (o <code>npm run online</code>).</p>'}
+      <p class="tiny">Contraseña: ${caps.hasPassword ? '<span class="ok">configurada ✓</span> — cámbiala abajo en APP_PASSWORD' : '<span class="bad">sin contraseña</span> — se crea sola al abrir el link'}. Desde esta misma PC no se pide contraseña.</p>
+    </div>
     <div class="card"><h3>🔑 Claves y conectores (se guardan solo en tu PC)</h3>
       <div class="tiny" style="margin-bottom:8px">Deja en blanco para no cambiar. Escribe «-» para borrar una clave.</div>
       ${Object.entries(s.secrets).map(([k, v]) => `<div class="secret-row"><div><div class="k">${k} ${v.set ? '<span class="ok">✓</span>' : ''}</div><div class="d">${esc(v.desc)}</div></div><input data-secret="${k}" type="${/MODEL|FILE|USER_ID/.test(k) ? 'text' : 'password'}" placeholder="${esc(v.preview || 'no configurada')}" autocomplete="off"></div>`).join('')}

@@ -34,6 +34,7 @@ export const SECRET_KEYS = {
   INSTAGRAM_ACCESS_TOKEN: 'Opcional: métricas de Instagram (Graph API, cuenta profesional).',
   INSTAGRAM_USER_ID: 'Opcional: ID de tu cuenta profesional de Instagram.',
   YTDLP_COOKIES_FILE: 'Opcional: ruta a cookies.txt si YouTube pide verificar que no eres un bot.',
+  APP_PASSWORD: 'Contraseña para entrar a la oficina desde el link público (npm run online).',
 };
 
 let secrets = {};

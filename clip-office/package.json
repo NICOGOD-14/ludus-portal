@@ -5,6 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
+    "online": "node scripts/online.js",
     "dev": "node --watch server/index.js",
     "test": "node --test test/*.test.js",
     "setup": "node scripts/setup.js"
